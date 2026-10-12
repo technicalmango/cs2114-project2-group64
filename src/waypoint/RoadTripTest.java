@@ -1,3 +1,5 @@
+package waypoint;
+
 /**
  * Tests RoadTrip without requiring JUnit.
  * Run this class as a Java Application.
