@@ -108,17 +108,16 @@ public class TripFileManager
     /*
      * Writes all activities belonging to a destination
      */
-    private void saveActivities(
-        Destination destination, BufferedWriter writer)
+    private void saveActivities(Destination destination, BufferedWriter writer)
         throws IOException
     {
         for (int i = 0; i < destination.getActivityCount(); i++)
         {
             Activity activity = destination.getActivity(i);
 
-            writeRecord(
-                writer, "ACTIVITY", activity.getName());
+            writeRecord(writer, "ACTIVITY", activity.getName());
         }
+    }
 
 
     /**

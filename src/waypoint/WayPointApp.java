@@ -1,5 +1,6 @@
 package waypoint;
 
+import java.io.PrintStream;
 import java.util.Scanner;
 
 /**
@@ -13,6 +14,7 @@ public class WayPointApp
     private final Scanner scanner;
     private final TripFileManager fileManager;
     private RoadTrip currentTrip;
+    private final PrintStream output;
 
     /**
      * Creates the application.
@@ -20,88 +22,100 @@ public class WayPointApp
     public WayPointApp()
     {
         scanner = new Scanner(System.in);
+        output = System.out;
         fileManager = new TripFileManager();
     }
+
+
+    public WayPointApp(
+        Scanner scanner,
+        PrintStream output,
+        TripFileManager fileManager)
+    {
+        this.scanner = scanner;
+        this.output = output;
+        this.fileManager = fileManager;
+    }
+
 
     /**
      * Loads saved data and runs the main menu.
      *
-     * @param args command-line arguments
+     * @param args
+     *            command-line arguments
      */
     public static void main(String[] args)
     {
         WayPointApp app = new WayPointApp();
+        app.run();
+    }
 
+
+    public void run()
+    {
         try
         {
-            app.currentTrip = app.fileManager.loadTrip();
+            currentTrip = fileManager.loadTrip();
 
-            if (app.currentTrip != null)
+            if (currentTrip != null)
             {
-                System.out.println(
-                    "Loaded trip: " + app.currentTrip.getName());
+                output.println("Loaded trip: " + currentTrip.getName());
             }
         }
         catch (Exception exception)
         {
-            System.out.println(
-                "Could not load a saved trip: "
-                    + exception.getMessage());
+            output.println(
+                "Could not load a saved trip: " + exception.getMessage());
         }
 
         boolean running = true;
 
         while (running)
         {
-            app.displayMainMenu();
-            int choice = app.readInt("Choose an option: ", 0, 10);
+            displayMainMenu();
+            int choice = readInt("Choose an option: ", 0, 10);
 
             switch (choice)
             {
                 case 1:
-                    app.createTrip();
+                    createTrip();
                     break;
                 case 2:
-                    app.addDestination();
+                    addDestination();
                     break;
                 case 3:
-                    app.insertDestination();
+                    insertDestination();
                     break;
                 case 4:
-                    app.removeDestination();
+                    removeDestination();
                     break;
                 case 5:
-                    app.viewDestinations();
+                    viewDestinations();
                     break;
                 case 6:
-                    app.addActivity();
+                    addActivity();
                     break;
                 case 7:
-                    app.removeActivity();
+                    removeActivity();
                     break;
                 case 8:
-                    app.viewActivities();
+                    viewActivities();
                     break;
                 case 9:
-                    app.viewRouteInformation();
-                    break;
-                case 10:
-                    running = !app.saveAndExit();
+                    running = !saveAndExit();
                     break;
                 case 0:
-                    System.out.print(
-                        "Exit without saving? Enter yes to confirm: ");
+                    output.print("Exit without saving? Enter yes to confirm: ");
 
-                    running = !app.scanner.nextLine()
-                        .trim().equalsIgnoreCase("yes");
+                    running =
+                        !scanner.nextLine().trim().equalsIgnoreCase("yes");
                     break;
                 default:
                     break;
             }
         }
-
-        app.scanner.close();
     }
+
 
     /**
      * Displays the available menu options.
@@ -128,6 +142,7 @@ public class WayPointApp
         System.out.println("0. Exit without saving");
     }
 
+
     /**
      * Creates a new trip using a name entered by the user.
      */
@@ -150,6 +165,7 @@ public class WayPointApp
         System.out.println("Trip created.");
     }
 
+
     /**
      * Adds a destination to the end of the current trip.
      */
@@ -164,6 +180,7 @@ public class WayPointApp
         currentTrip.addDestination(new Destination(name));
         System.out.println("Destination added.");
     }
+
 
     /**
      * Inserts a destination at a selected position.
@@ -184,11 +201,11 @@ public class WayPointApp
 
         String name = readName("Enter the destination name: ");
 
-        currentTrip.insertDestination(
-            position, new Destination(name));
+        currentTrip.insertDestination(position, new Destination(name));
 
         System.out.println("Destination inserted.");
     }
+
 
     /**
      * Removes a selected destination from the current trip.
@@ -212,6 +229,7 @@ public class WayPointApp
         System.out.println("Removed: " + removed.getName());
     }
 
+
     /**
      * Displays all destinations in travel order.
      */
@@ -224,6 +242,7 @@ public class WayPointApp
 
         System.out.println(currentTrip);
     }
+
 
     /**
      * Adds an activity to a selected destination.
@@ -242,6 +261,7 @@ public class WayPointApp
 
         System.out.println("Activity added.");
     }
+
 
     /**
      * Removes an activity from a selected destination.
@@ -273,6 +293,7 @@ public class WayPointApp
         System.out.println("Removed: " + removed.getName());
     }
 
+
     /**
      * Displays activities for a selected destination.
      */
@@ -286,75 +307,6 @@ public class WayPointApp
         }
     }
 
-    /**
-     * Requests route information between two destinations.
-     */
-    public void viewRouteInformation()
-    {
-        if (!requireDestinations())
-        {
-            return;
-        }
-
-        if (currentTrip.getDestinationCount() < 2)
-        {
-            System.out.println(
-                "Add at least two destinations to view a route.");
-            return;
-        }
-
-        viewDestinations();
-
-        int startPosition = readInt(
-            "Enter the starting destination number: ",
-            1,
-            currentTrip.getDestinationCount());
-
-        int endPosition = readInt(
-            "Enter the ending destination number: ",
-            1,
-            currentTrip.getDestinationCount());
-
-        if (startPosition == endPosition)
-        {
-            System.out.println("Select two different destinations.");
-            return;
-        }
-
-        Destination start =
-            currentTrip.getDestination(startPosition);
-        Destination end =
-            currentTrip.getDestination(endPosition);
-
-        try
-        {
-            RouteService routeService = new RouteService();
-            RouteInfo route = routeService.getRoute(start, end);
-
-            if (route == null)
-            {
-                System.out.println("No route was found.");
-                return;
-            }
-
-            System.out.println(
-                "\nRoute: " + start.getName() + " to " + end.getName());
-
-            System.out.printf(
-                "Driving distance: %.1f miles%n",
-                route.getDistanceMiles());
-
-            System.out.println(
-                "Estimated travel time: "
-                    + route.getDurationMinutes() + " minutes");
-        }
-        catch (Exception exception)
-        {
-            System.out.println(
-                "Could not retrieve route information: "
-                    + exception.getMessage());
-        }
-    }
 
     /**
      * Saves the current trip before allowing the program to exit.
@@ -377,12 +329,13 @@ public class WayPointApp
         }
         catch (Exception exception)
         {
-            System.out.println(
-                "Could not save the trip: " + exception.getMessage());
+            System.out
+                .println("Could not save the trip: " + exception.getMessage());
             System.out.println("Your trip is still open.");
             return false;
         }
     }
+
 
     /**
      * Checks whether a current trip exists.
@@ -399,6 +352,7 @@ public class WayPointApp
 
         return true;
     }
+
 
     /**
      * Checks whether the current trip contains destinations.
@@ -420,6 +374,7 @@ public class WayPointApp
 
         return true;
     }
+
 
     /**
      * Lets the user select an existing destination.
@@ -443,10 +398,12 @@ public class WayPointApp
         return currentTrip.getDestination(position);
     }
 
+
     /**
      * Displays a destination's numbered activities.
      *
-     * @param destination the destination to display
+     * @param destination
+     *            the destination to display
      */
     private void displayActivities(Destination destination)
     {
@@ -458,20 +415,20 @@ public class WayPointApp
             return;
         }
 
-        for (int position = 1;
-            position <= destination.getActivityCount();
-            position++)
+        for (int position = 1; position <= destination
+            .getActivityCount(); position++)
         {
             System.out.println(
-                position + ". "
-                    + destination.getActivity(position).getName());
+                position + ". " + destination.getActivity(position).getName());
         }
     }
+
 
     /**
      * Reads a nonblank name.
      *
-     * @param prompt the prompt to display
+     * @param prompt
+     *            the prompt to display
      * @return the trimmed name
      */
     private String readName(String prompt)
@@ -490,12 +447,16 @@ public class WayPointApp
         }
     }
 
+
     /**
      * Reads an integer within the given inclusive range.
      *
-     * @param prompt the prompt to display
-     * @param min the smallest valid value
-     * @param max the largest valid value
+     * @param prompt
+     *            the prompt to display
+     * @param min
+     *            the smallest valid value
+     * @param max
+     *            the largest valid value
      * @return a valid integer
      */
     private int readInt(String prompt, int min, int max)
@@ -506,8 +467,7 @@ public class WayPointApp
 
             try
             {
-                int value = Integer.parseInt(
-                    scanner.nextLine().trim());
+                int value = Integer.parseInt(scanner.nextLine().trim());
 
                 if (value >= min && value <= max)
                 {

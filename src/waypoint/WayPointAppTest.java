@@ -5,9 +5,8 @@ import java.io.PrintStream;
 import java.util.Scanner;
 
 /**
- * Tests the console application using scripted input.
- * FakeFileManager avoids writing real CSV files.
- * Run this class as a Java Application.
+ * Tests the console application using scripted input. FakeFileManager avoids
+ * writing real CSV files. Run this class as a Java Application.
  *
  * @author Jovany
  * @version 2.0
@@ -19,7 +18,8 @@ public class WayPointAppTest
     /**
      * Runs the test cases.
      *
-     * @param args unused
+     * @param args
+     *            unused
      */
     public static void main(String[] args)
     {
@@ -32,12 +32,11 @@ public class WayPointAppTest
         testLoad();
         testLoadFailure();
         testSaveFailure();
-        testOptionalRoute();
         testEndOfInput();
 
-        System.out.println(
-            "WayPointAppTest: " + checks + " checks passed.");
+        System.out.println("WayPointAppTest: " + checks + " checks passed.");
     }
+
 
     /**
      * Tests nonnumeric, overflowing, and out-of-range menu input.
@@ -46,21 +45,19 @@ public class WayPointAppTest
     {
         FakeFileManager files = new FakeFileManager();
 
-        String output = session(
-            "oops\n999999999999999999\n-1\n11\n0\n", files);
+        String output = session("oops\n999999999999999999\n-1\n10\n0\n", files);
 
         check(
             output.contains("Enter a whole number."),
             "Nonnumeric menu input is rejected");
 
         check(
-            output.contains("Choose an option from 0 to 10."),
+            output.contains("Choose an option from 0 to 9."),
             "Out-of-range menu input is rejected");
 
-        check(
-            files.saveCalls == 0,
-            "Exiting without a trip does not save");
+        check(files.saveCalls == 0, "Exiting without a trip does not save");
     }
+
 
     /**
      * Tests operations before creating a trip.
@@ -69,17 +66,15 @@ public class WayPointAppTest
     {
         FakeFileManager files = new FakeFileManager();
 
-        String output = session(
-            "2\n4\n5\n6\n7\n8\n9\n0\n", files);
+        String output = session("2\n4\n5\n6\n7\n8\n9\n0\n", files);
 
         check(
             output.contains("Create a trip first."),
             "Operations require a trip");
 
-        check(
-            files.saveCalls == 0,
-            "Invalid operations do not create a trip");
+        check(files.saveCalls == 0, "Invalid operations do not create a trip");
     }
+
 
     /**
      * Tests blank names and operations on an empty trip.
@@ -88,8 +83,7 @@ public class WayPointAppTest
     {
         FakeFileManager files = new FakeFileManager();
 
-        String output = session(
-            "1\n\n  \nFall Trip\n4\n6\n9\n0\n", files);
+        String output = session("1\n\n  \nFall Trip\n4\n6\n9\n0\n", files);
 
         check(
             output.contains("Name cannot be blank."),
@@ -104,10 +98,9 @@ public class WayPointAppTest
                 && output.contains("Most active destination: None"),
             "Empty summary is correct");
 
-        check(
-            files.saved.isEmpty(),
-            "An empty trip can be saved");
+        check(files.saved.isEmpty(), "An empty trip can be saved");
     }
+
 
     /**
      * Tests insertion, appending, selection, summaries, and removal.
@@ -116,18 +109,9 @@ public class WayPointAppTest
     {
         FakeFileManager files = new FakeFileManager();
 
-        String input =
-            "1\nFall Trip\n"
-                + "3\n0\n2\n1\nRichmond\n"
-                + "2\nBoston\n"
-                + "3\n2\nDC\n"
-                + "6\n0\n4\n1\n\nMuseum\n"
-                + "6\n2\nLunch\n"
-                + "8\n1\n"
-                + "9\n"
-                + "4\n2\n"
-                + "5\n"
-                + "0\n";
+        String input = "1\nFall Trip\n" + "3\n0\n2\n1\nRichmond\n"
+            + "2\nBoston\n" + "3\n2\nDC\n" + "6\n0\n4\n1\n\nMuseum\n"
+            + "6\n2\nLunch\n" + "8\n1\n" + "9\n" + "4\n2\n" + "5\n" + "0\n";
 
         String output = session(input, files);
 
@@ -135,9 +119,7 @@ public class WayPointAppTest
             output.contains("Invalid position."),
             "Invalid positions are rejected");
 
-        check(
-            output.contains("1. Museum"),
-            "Activities are displayed");
+        check(output.contains("1. Museum"), "Activities are displayed");
 
         check(
             output.contains("Total activities: 2"),
@@ -161,6 +143,7 @@ public class WayPointAppTest
             "Activities belong to the selected destination");
     }
 
+
     /**
      * Tests empty activity lists and duplicate activity names.
      */
@@ -168,14 +151,8 @@ public class WayPointAppTest
     {
         FakeFileManager files = new FakeFileManager();
 
-        String input =
-            "1\nTrip\n"
-                + "2\nDC\n"
-                + "7\n1\n"
-                + "6\n1\nMuseum\n"
-                + "6\n1\nMuseum\n"
-                + "7\n1\n0\n3\n2\n"
-                + "0\n";
+        String input = "1\nTrip\n" + "2\nDC\n" + "7\n1\n" + "6\n1\nMuseum\n"
+            + "6\n1\nMuseum\n" + "7\n1\n0\n3\n2\n" + "0\n";
 
         String output = session(input, files);
 
@@ -188,6 +165,7 @@ public class WayPointAppTest
             "Duplicate activities are removed by position");
     }
 
+
     /**
      * Tests canceling and confirming trip replacement.
      */
@@ -195,8 +173,7 @@ public class WayPointAppTest
     {
         FakeFileManager files = new FakeFileManager();
 
-        session(
-            "1\nOriginal\n2\nDC\n1\nno\n0\n", files);
+        session("1\nOriginal\n2\nDC\n1\nno\n0\n", files);
 
         check(
             files.saved.getName().equals("Original")
@@ -205,14 +182,13 @@ public class WayPointAppTest
 
         files = new FakeFileManager();
 
-        session(
-            "1\nOriginal\n2\nDC\n1\nyes\nNew\n0\n", files);
+        session("1\nOriginal\n2\nDC\n1\nyes\nNew\n0\n", files);
 
         check(
-            files.saved.getName().equals("New")
-                && files.saved.isEmpty(),
+            files.saved.getName().equals("New") && files.saved.isEmpty(),
             "Confirming replacement creates a new trip");
     }
+
 
     /**
      * Tests loading and modifying a saved trip.
@@ -232,10 +208,10 @@ public class WayPointAppTest
             "Loading is reported");
 
         check(
-            files.saved == loaded
-                && files.saved.getDestinationCount() == 2,
+            files.saved == loaded && files.saved.getDestinationCount() == 2,
             "Loaded trip remains editable and is saved");
     }
+
 
     /**
      * Tests recovery after a load failure.
@@ -245,8 +221,7 @@ public class WayPointAppTest
         FakeFileManager files = new FakeFileManager();
         files.failLoad = true;
 
-        String output = session(
-            "1\nRecovery\n0\n", files);
+        String output = session("1\nRecovery\n0\n", files);
 
         check(
             output.contains("Could not load trip:"),
@@ -257,6 +232,7 @@ public class WayPointAppTest
             "A new trip can be created after a load failure");
     }
 
+
     /**
      * Tests editing and retrying after a save failure.
      */
@@ -265,37 +241,22 @@ public class WayPointAppTest
         FakeFileManager files = new FakeFileManager();
         files.failNextSave = true;
 
-        String output = session(
-            "1\nRetry\n0\n2\nDC\n0\n", files);
+        String output = session("1\nRetry\n0\n2\nDC\n0\n", files);
 
         check(
             output.contains("Could not save trip:"),
             "Save failure is reported");
 
         check(
-            files.saveCalls == 2
-                && files.saved.getDestinationCount() == 1,
+            files.saveCalls == 2 && files.saved.getDestinationCount() == 1,
             "Failed saves keep the menu running and allow retry");
 
         check(
-            output.contains("Trip saved.")
-                && output.indexOf("Trip saved.")
-                    == output.lastIndexOf("Trip saved."),
+            output.contains("Trip saved.") && output
+                .indexOf("Trip saved.") == output.lastIndexOf("Trip saved."),
             "Only a successful save claims success");
     }
 
-    /**
-     * Tests that the optional API does not block the application.
-     */
-    private static void testOptionalRoute()
-    {
-        FakeFileManager files = new FakeFileManager();
-        String output = session("10\n0\n", files);
-
-        check(
-            output.contains("not implemented"),
-            "Optional route functionality is clearly identified");
-    }
 
     /**
      * Tests that ending input attempts a save.
@@ -304,44 +265,46 @@ public class WayPointAppTest
     {
         FakeFileManager files = new FakeFileManager();
 
-        String output = session(
-            "1\nEOF Trip\n", files);
+        String output = session("1\nEOF Trip\n", files);
 
         check(
-            output.contains("Input ended.")
-                && files.saveCalls == 1,
+            output.contains("Input ended.") && files.saveCalls == 1,
             "Ending input attempts to save the trip");
     }
+
 
     /**
      * Runs a session with scripted input and captured output.
      *
-     * @param input the scripted input
-     * @param files the fake persistence service
+     * @param input
+     *            the scripted input
+     * @param files
+     *            the fake persistence service
      * @return the captured output
      */
-    private static String session(
-        String input, FakeFileManager files)
+    private static String session(String input, FakeFileManager files)
     {
-        ByteArrayOutputStream buffer =
-            new ByteArrayOutputStream();
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
         PrintStream output = new PrintStream(buffer);
 
-        WayPointApp app = new WayPointApp(
-            new Scanner(input), output, files);
+        WayPointApp app = new WayPointApp(new Scanner(input), output, files);
 
         app.run();
+
         output.flush();
 
         return buffer.toString();
     }
 
+
     /**
      * Checks a test condition.
      *
-     * @param condition the expected true condition
-     * @param message the failure description
+     * @param condition
+     *            the expected true condition
+     * @param message
+     *            the failure description
      */
     private static void check(boolean condition, String message)
     {
@@ -356,7 +319,8 @@ public class WayPointAppTest
     /**
      * Simulates persistence without reading or writing files.
      */
-    private static class FakeFileManager extends TripFileManager
+    private static class FakeFileManager
+        extends TripFileManager
     {
         private RoadTrip loaded;
         private RoadTrip saved;
@@ -380,10 +344,12 @@ public class WayPointAppTest
             return loaded;
         }
 
+
         /**
          * Records the trip or simulates one failed save.
          *
-         * @param trip the trip to save
+         * @param trip
+         *            the trip to save
          */
         @Override
         public void saveTrip(RoadTrip trip)
@@ -394,8 +360,7 @@ public class WayPointAppTest
             {
                 failNextSave = false;
 
-                throw new IllegalStateException(
-                    "Unwritable CSV");
+                throw new IllegalStateException("Unwritable CSV");
             }
 
             saved = trip;
