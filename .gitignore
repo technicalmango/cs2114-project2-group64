@@ -1,1 +1,4 @@
 /bin/
+
+# Ignore saved trip data
+waypoint-trip.csv
