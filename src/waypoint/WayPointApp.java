@@ -1,3 +1,5 @@
+package waypoint;
+
 import java.util.Scanner;
 
 /**
