@@ -1,32 +1,19 @@
 /**
- * A generic chain of linked nodes. Use it as the storage inside your
- * own classes, and extend or modify it as your project needs.
- *
- * This class owns storage only: nodes, the head reference, and the
- * count. It contains no application logic. A class that needs a
- * collection should hold a LinkedChain field and call its methods.
- *
- * add() places the new entry at the FRONT of the chain, so entries added
- * with add() come back from toArray() in reverse order of insertion.
- * addToEnd() preserves insertion order.
- *
- * Time complexity, where n is the number of entries:
- *   add              O(1)
- *   addToEnd         O(n)
- *   remove()         O(1)
- *   remove(T)        O(n)
- *   clear            O(1)
- *   get              O(n)
- *   contains         O(n)
- *   count            O(n)
- *   size             O(1)
- *   isEmpty          O(1)
- *   toArray          O(n)
+ * A generic chain of linked nodes. Use it as the storage inside your own
+ * classes, and extend or modify it as your project needs. This class owns
+ * storage only: nodes, the head reference, and the count. It contains no
+ * application logic. A class that needs a collection should hold a LinkedChain
+ * field and call its methods. add() places the new entry at the FRONT of the
+ * chain, so entries added with add() come back from toArray() in reverse order
+ * of insertion. addToEnd() preserves insertion order. Time complexity, where n
+ * is the number of entries: add O(1) addToEnd O(n) remove() O(1) remove(T) O(n)
+ * clear O(1) get O(n) contains O(n) count O(n) size O(1) isEmpty O(1) toArray
+ * O(n)
  *
  * @author CS 2114 Staff
  * @version September 2026
- *
- * @param <T> the type of entries stored in the chain
+ * @param <T>
+ *            the type of entries stored in the chain
  */
 public class LinkedChain<T>
 {
@@ -42,12 +29,15 @@ public class LinkedChain<T>
         numberOfEntries = 0;
     }
 
+
     /**
      * Adds a new entry to the front of this chain.
      *
-     * @param newEntry the object to be added; must not be null
+     * @param newEntry
+     *            the object to be added; must not be null
      * @return true
-     * @throws IllegalArgumentException if newEntry is null
+     * @throws IllegalArgumentException
+     *             if newEntry is null
      */
     public boolean add(T newEntry)
     {
@@ -57,12 +47,15 @@ public class LinkedChain<T>
         return true;
     }
 
+
     /**
      * Adds a new entry to the end of this chain.
      *
-     * @param newEntry the object to be added; must not be null
+     * @param newEntry
+     *            the object to be added; must not be null
      * @return true
-     * @throws IllegalArgumentException if newEntry is null
+     * @throws IllegalArgumentException
+     *             if newEntry is null
      */
     public boolean addToEnd(T newEntry)
     {
@@ -85,6 +78,72 @@ public class LinkedChain<T>
         return true;
     }
 
+
+    /**
+     * Adds a new entry to a specific index in the Linked Chain
+     */
+    public boolean add(int index, T entry)
+    {
+        requireNonNull(entry);
+
+        if (index < 0 || index > numberOfEntries)
+        {
+            throw new IndexOutOfBoundsException(
+                "Invalid insertion index: " + index);
+        }
+
+        if (index == 0)
+        {
+            return add(entry);
+        }
+
+        Node<T> previous = firstNode;
+
+        for (int i = 1; i < index; i++)
+        {
+            previous = previous.next;
+        }
+
+        Node<T> newNode = new Node<T>(entry, previous.next);
+        previous.next = newNode;
+
+        numberOfEntries++;
+        return true;
+    }
+
+
+    /**
+     * Removes a specific entry in a specific position and not by name
+     */
+    public T remove(int index)
+    {
+        if (index < 0 || index >= numberOfEntries)
+        {
+            throw new IndexOutOfBoundsException(
+                "Invalid removal index: " + index);
+        }
+
+        if (index == 0)
+        {
+            return remove();
+        }
+
+        Node<T> previous = firstNode;
+
+        for (int i = 1; i < index; i++)
+        {
+            previous = previous.next;
+        }
+
+        Node<T> removedNode = previous.next;
+        previous.next = removedNode.next;
+
+        numberOfEntries--;
+
+        return removedNode.data;
+    }
+
+
     /**
      * Removes and returns the first entry in this chain, if possible.
      *
@@ -102,10 +161,12 @@ public class LinkedChain<T>
         return result;
     }
 
+
     /**
      * Removes the first occurrence of a given entry from this chain.
      *
-     * @param anEntry the entry to be removed
+     * @param anEntry
+     *            the entry to be removed
      * @return true if the removal was successful, or false if not
      */
     public boolean remove(T anEntry)
@@ -136,6 +197,7 @@ public class LinkedChain<T>
         return false;
     }
 
+
     /**
      * Removes all entries from this chain.
      */
@@ -145,13 +207,16 @@ public class LinkedChain<T>
         numberOfEntries = 0;
     }
 
+
     /**
      * Gets the entry at the given position without removing it.
      *
-     * @param index the zero-based position
+     * @param index
+     *            the zero-based position
      * @return the entry at that position
-     * @throws IndexOutOfBoundsException if index is negative or
-     *         index is greater than or equal to size()
+     * @throws IndexOutOfBoundsException
+     *             if index is negative or index is greater than or equal to
+     *             size()
      */
     public T get(int index)
     {
@@ -159,7 +224,7 @@ public class LinkedChain<T>
         {
             throw new IndexOutOfBoundsException(
                 "Index " + index + " out of bounds for size "
-                + numberOfEntries);
+                    + numberOfEntries);
         }
         Node<T> current = firstNode;
         for (int i = 0; i < index; i++)
@@ -169,10 +234,12 @@ public class LinkedChain<T>
         return current.data;
     }
 
+
     /**
      * Tests whether this chain contains a given entry.
      *
-     * @param anEntry the entry to locate
+     * @param anEntry
+     *            the entry to locate
      * @return true if the chain contains anEntry, or false if not
      */
     public boolean contains(T anEntry)
@@ -180,10 +247,12 @@ public class LinkedChain<T>
         return count(anEntry) > 0;
     }
 
+
     /**
      * Counts the number of times a given entry appears in this chain.
      *
-     * @param anEntry the entry to be counted
+     * @param anEntry
+     *            the entry to be counted
      * @return the number of times anEntry appears in the chain
      */
     public int count(T anEntry)
@@ -205,6 +274,7 @@ public class LinkedChain<T>
         return frequency;
     }
 
+
     /**
      * Gets the number of entries currently in this chain.
      *
@@ -214,6 +284,7 @@ public class LinkedChain<T>
     {
         return numberOfEntries;
     }
+
 
     /**
      * Sees whether this chain is empty.
@@ -225,14 +296,16 @@ public class LinkedChain<T>
         return numberOfEntries == 0;
     }
 
+
     /**
-     * Copies every entry in this chain into the given array, first entry
-     * first.
+     * Copies every entry in this chain into the given array, first entry first.
      *
-     * @param values an array of the correct type to fill; it must have
-     *               length at least size()
+     * @param values
+     *            an array of the correct type to fill; it must have length at
+     *            least size()
      * @return the array containing all entries in the chain
-     * @throws IllegalArgumentException if values is null or too small
+     * @throws IllegalArgumentException
+     *             if values is null or too small
      */
     public T[] toArray(T[] values)
     {
@@ -243,8 +316,8 @@ public class LinkedChain<T>
         if (values.length < numberOfEntries)
         {
             throw new IllegalArgumentException(
-                "Array of length " + values.length
-                + " is too small for " + numberOfEntries + " entries");
+                "Array of length " + values.length + " is too small for "
+                    + numberOfEntries + " entries");
         }
         int index = 0;
         Node<T> current = firstNode;
@@ -257,9 +330,10 @@ public class LinkedChain<T>
         return values;
     }
 
+
     /**
-     * Returns a readable listing of the chain, first entry first,
-     * e.g. "[a, b, c]".
+     * Returns a readable listing of the chain, first entry first, e.g. "[a, b,
+     * c]".
      *
      * @return a string representation of this chain
      */
@@ -281,11 +355,14 @@ public class LinkedChain<T>
         return sb.toString();
     }
 
+
     /**
      * Rejects null entries.
      *
-     * @param entry the entry to check
-     * @throws IllegalArgumentException if entry is null
+     * @param entry
+     *            the entry to check
+     * @throws IllegalArgumentException
+     *             if entry is null
      */
     private void requireNonNull(T entry)
     {
@@ -298,7 +375,8 @@ public class LinkedChain<T>
     /**
      * A node in the chain. Holds one entry and a link to the next node.
      *
-     * @param <E> the type of data held in the node
+     * @param <E>
+     *            the type of data held in the node
      */
     private static class Node<E>
     {
@@ -308,18 +386,22 @@ public class LinkedChain<T>
         /**
          * Creates a node with the given data and no next node.
          *
-         * @param dataPortion the entry to store
+         * @param dataPortion
+         *            the entry to store
          */
         private Node(E dataPortion)
         {
             this(dataPortion, null);
         }
 
+
         /**
          * Creates a node with the given data and next link.
          *
-         * @param dataPortion the entry to store
-         * @param nextNode the node that follows this one
+         * @param dataPortion
+         *            the entry to store
+         * @param nextNode
+         *            the node that follows this one
          */
         private Node(E dataPortion, Node<E> nextNode)
         {
