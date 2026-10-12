@@ -61,34 +61,7 @@ public class TripFileManager
                     Files.newBufferedWriter(temporary, StandardCharsets.UTF_8))
             {
                 writeRecord(writer, "TRIP", trip.getName());
-
-                for (int i = 0; i < trip.getDestinationCount(); i++)
-                {
-                    Destination destination = trip.getDestination(i);
-
-                    if (destination == null
-                        || !InputValidator.isValidName(destination.getName()))
-                    {
-                        throw new IllegalArgumentException(
-                            "Invalid destination at index " + i);
-                    }
-
-                    writeRecord(writer, "DESTINATION", destination.getName());
-
-                    for (int j = 0; j < destination.getActivityCount(); j++)
-                    {
-                        Activity activity = destination.getActivity(j);
-
-                        if (activity == null
-                            || !InputValidator.isValidName(activity.getName()))
-                        {
-                            throw new IllegalArgumentException(
-                                "Invalid activity at index " + j);
-                        }
-
-                        writeRecord(writer, "ACTIVITY", activity.getName());
-                    }
-                }
+                saveDestinations(trip, writer);
             }
 
             try
@@ -112,6 +85,40 @@ public class TripFileManager
             Files.deleteIfExists(temporary);
         }
     }
+
+
+    /*
+     * Writes all destinations and their associated activities to the specified
+     * CSV writer
+     */
+    private void saveDestinations(RoadTrip trip, BufferedWriter writer)
+        throws IOException
+    {
+        for (int i = 0; i < trip.getDestinationCount(); i++)
+        {
+            Destination destination = trip.getDestination(i);
+
+            writeRecord(writer, "DESTINATION", destination.getName());
+
+            saveActivities(destination, writer);
+        }
+    }
+
+
+    /*
+     * Writes all activities belonging to a destination
+     */
+    private void saveActivities(
+        Destination destination, BufferedWriter writer)
+        throws IOException
+    {
+        for (int i = 0; i < destination.getActivityCount(); i++)
+        {
+            Activity activity = destination.getActivity(i);
+
+            writeRecord(
+                writer, "ACTIVITY", activity.getName());
+        }
 
 
     /**
