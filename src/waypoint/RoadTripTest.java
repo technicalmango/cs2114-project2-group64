@@ -1,8 +1,7 @@
 package waypoint;
 
 /**
- * Tests RoadTrip without requiring JUnit.
- * Run this class as a Java Application.
+ * Tests RoadTrip without requiring JUnit. Run this class as a Java Application.
  *
  * @author Jovany
  * @version 2.0
@@ -14,23 +13,20 @@ public class RoadTripTest
     /**
      * Runs the test cases.
      *
-     * @param args unused
+     * @param args
+     *            unused
      */
     public static void main(String[] args)
     {
         RoadTrip trip = new RoadTrip("  Fall Trip  ");
 
-        check(
-            "Fall Trip".equals(trip.getName()),
-            "Constructor trims the name");
+        check("Fall Trip".equals(trip.getName()), "Constructor trims the name");
 
         check(
             trip.isEmpty() && trip.getDestinationCount() == 0,
             "New trip is empty");
 
-        check(
-            trip.getTotalActivities() == 0,
-            "Empty trip has zero activities");
+        check(trip.getTotalActivities() == 0, "Empty trip has zero activities");
 
         check(
             trip.getMostActiveDestination() == null,
@@ -40,21 +36,13 @@ public class RoadTripTest
             trip.toString().contains("No destinations"),
             "Empty trip displays correctly");
 
-        expect(
-            IllegalArgumentException.class,
-            () -> new RoadTrip(null));
+        expect(IllegalArgumentException.class, () -> new RoadTrip(null));
 
-        expect(
-            IllegalArgumentException.class,
-            () -> new RoadTrip("  "));
+        expect(IllegalArgumentException.class, () -> new RoadTrip("  "));
 
-        expect(
-            IllegalArgumentException.class,
-            () -> trip.setName(null));
+        expect(IllegalArgumentException.class, () -> trip.setName(null));
 
-        expect(
-            IllegalArgumentException.class,
-            () -> trip.setName("\t"));
+        expect(IllegalArgumentException.class, () -> trip.setName("\t"));
 
         check(
             "Fall Trip".equals(trip.getName()),
@@ -62,9 +50,7 @@ public class RoadTripTest
 
         trip.setName("Spring Trip");
 
-        check(
-            "Spring Trip".equals(trip.getName()),
-            "Valid rename succeeds");
+        check("Spring Trip".equals(trip.getName()), "Valid rename succeeds");
 
         Destination a = new Destination("Richmond");
         Destination b = new Destination("DC");
@@ -80,17 +66,11 @@ public class RoadTripTest
             trip.getDestinationCount() == 4 && !trip.isEmpty(),
             "Destination count updates");
 
-        check(
-            trip.getDestination(0) == a,
-            "Insertion at the beginning works");
+        check(trip.getDestination(0) == a, "Insertion at the beginning works");
 
-        check(
-            trip.getDestination(1) == b,
-            "Insertion in the middle works");
+        check(trip.getDestination(1) == b, "Insertion in the middle works");
 
-        check(
-            trip.getDestination(2) == c,
-            "Appending preserves order");
+        check(trip.getDestination(2) == c, "Appending preserves order");
 
         check(
             trip.getDestination(3) == duplicate,
@@ -100,9 +80,7 @@ public class RoadTripTest
             trip.getMostActiveDestination() == null,
             "Stops with no activities return null");
 
-        expect(
-            IllegalArgumentException.class,
-            () -> trip.addDestination(null));
+        expect(IllegalArgumentException.class, () -> trip.addDestination(null));
 
         expect(
             IllegalArgumentException.class,
@@ -116,13 +94,9 @@ public class RoadTripTest
             IndexOutOfBoundsException.class,
             () -> trip.insertDestination(5, a));
 
-        expect(
-            IndexOutOfBoundsException.class,
-            () -> trip.getDestination(-1));
+        expect(IndexOutOfBoundsException.class, () -> trip.getDestination(-1));
 
-        expect(
-            IndexOutOfBoundsException.class,
-            () -> trip.getDestination(4));
+        expect(IndexOutOfBoundsException.class, () -> trip.getDestination(4));
 
         expect(
             IndexOutOfBoundsException.class,
@@ -137,8 +111,7 @@ public class RoadTripTest
             "Invalid operations preserve the count");
 
         check(
-            trip.getDestination(0) == a
-                && trip.getDestination(1) == b
+            trip.getDestination(0) == a && trip.getDestination(1) == b
                 && trip.getDestination(2) == c
                 && trip.getDestination(3) == duplicate,
             "Invalid operations preserve order");
@@ -174,18 +147,15 @@ public class RoadTripTest
         String display = trip.toString();
 
         check(
-            display.contains("Trip: Spring Trip")
-                && display.contains(
-                    "1. Richmond\n2. DC\n3. Boston\n4. Richmond"),
+            display.contains("Trip: Spring Trip") && display
+                .contains("1. Richmond\n2. DC\n3. Boston\n4. Richmond"),
             "Itinerary displays in travel order");
 
         check(
             trip.removeDestination(1) == b,
             "Removing the middle returns the correct destination");
 
-        check(
-            trip.getDestination(1) == c,
-            "Indices shift after removal");
+        check(trip.getDestination(1) == c, "Indices shift after removal");
 
         check(
             trip.getTotalActivities() == 1,
@@ -203,9 +173,7 @@ public class RoadTripTest
             trip.removeDestination(0) == c && trip.isEmpty(),
             "Removing the only destination leaves an empty trip");
 
-        expect(
-            IndexOutOfBoundsException.class,
-            () -> trip.getDestination(0));
+        expect(IndexOutOfBoundsException.class, () -> trip.getDestination(0));
 
         expect(
             IndexOutOfBoundsException.class,
@@ -216,15 +184,17 @@ public class RoadTripTest
                 && trip.getMostActiveDestination() == null,
             "Summaries return to empty values");
 
-        System.out.println(
-            "RoadTripTest: " + checks + " checks passed.");
+        System.out.println("RoadTripTest: " + checks + " checks passed.");
     }
+
 
     /**
      * Checks a test condition.
      *
-     * @param condition the expected true condition
-     * @param message the failure description
+     * @param condition
+     *            the expected true condition
+     * @param message
+     *            the failure description
      */
     private static void check(boolean condition, String message)
     {
@@ -236,14 +206,18 @@ public class RoadTripTest
         checks++;
     }
 
+
     /**
      * Checks that an operation throws the expected exception.
      *
-     * @param type the expected exception type
-     * @param operation the operation to execute
+     * @param type
+     *            the expected exception type
+     * @param operation
+     *            the operation to execute
      */
-    private static void expect(
-        Class<? extends Throwable> type, Runnable operation)
+    private static
+        void
+        expect(Class<? extends Throwable> type, Runnable operation)
     {
         try
         {
@@ -251,14 +225,11 @@ public class RoadTripTest
         }
         catch (Throwable error)
         {
-            check(
-                type.isInstance(error),
-                "Wrong exception: " + error);
+            check(type.isInstance(error), "Wrong exception: " + error);
 
             return;
         }
 
-        throw new AssertionError(
-            "Expected " + type.getSimpleName());
+        throw new AssertionError("Expected " + type.getSimpleName());
     }
 }
