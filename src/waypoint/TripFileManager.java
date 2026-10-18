@@ -16,17 +16,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Saves and loads trips using CSV records.
- *
- * Assumes Destination provides:
- * Destination(String name)
- * Destination(String name, LocalDate arrival, LocalDate departure)
- * getArrivalDate(), getDepartureDate()
- *
- * Assumes Activity provides:
- * Activity(String name)
- * Activity(String name, LocalDate date, LocalTime time, double cost)
- * getDate(), getTime(), getCost()
+ * Saves and loads trips using CSV records. Assumes Destination provides:
+ * Destination(String name) Destination(String name, LocalDate arrival,
+ * LocalDate departure) getArrivalDate(), getDepartureDate() Assumes Activity
+ * provides: Activity(String name) Activity(String name, LocalDate date,
+ * LocalTime time, double cost) getDate(), getTime(), getCost()
  */
 public class TripFileManager
 {
@@ -128,15 +122,13 @@ public class TripFileManager
     /**
      * Writes activities, including dates, times, and costs.
      */
-    private void saveActivities(
-        Destination destination,
-        BufferedWriter writer)
+    private void saveActivities(Destination destination, BufferedWriter writer)
         throws IOException
     {
         for (int i = 0; i < destination.getActivityCount(); i++)
         {
             Activity activity = destination.getActivity(i);
-            double cost = activity.getCost();
+            double cost = activity.getEstimatedCost();
 
             if (!Double.isFinite(cost) || cost < 0)
             {
@@ -224,10 +216,8 @@ public class TripFileManager
                     }
                     else
                     {
-                        LocalDate arrival =
-                            parseOptionalDate(record.get(2));
-                        LocalDate departure =
-                            parseOptionalDate(record.get(3));
+                        LocalDate arrival = parseOptionalDate(record.get(2));
+                        LocalDate departure = parseOptionalDate(record.get(3));
 
                         if (arrival != null && departure != null
                             && departure.isBefore(arrival))
@@ -294,11 +284,10 @@ public class TripFileManager
     /**
      * Writes a CSV record with proper quotation escaping.
      */
-    private static void writeRecord(
-        BufferedWriter writer,
-        String type,
-        String... fields)
-        throws IOException
+    private static
+        void
+        writeRecord(BufferedWriter writer, String type, String... fields)
+            throws IOException
     {
         writer.write(type);
 
@@ -326,10 +315,10 @@ public class TripFileManager
     /**
      * Checks that a record has a supported number of fields.
      */
-    private static void requireFieldCount(
-        List<String> record,
-        int... allowedCounts)
-        throws IOException
+    private static
+        void
+        requireFieldCount(List<String> record, int... allowedCounts)
+            throws IOException
     {
         for (int count : allowedCounts)
         {
@@ -340,8 +329,8 @@ public class TripFileManager
         }
 
         throw new IOException(
-            "Incorrect number of fields for " + record.get(0)
-                + ": " + record.size());
+            "Incorrect number of fields for " + record.get(0) + ": "
+                + record.size());
     }
 
 

@@ -536,7 +536,7 @@ public class WayPointApp
 
             try
             {
-                destination.setStayDates(arrival, departure);
+                destination.setDates(arrival, departure);
 
                 output.println("Destination dates updated.");
                 return;

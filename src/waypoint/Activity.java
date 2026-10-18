@@ -3,6 +3,7 @@ package waypoint;
 import java.util.Objects;
 import java.time.LocalDate;
 import java.time.LocalTime;
+
 /**
  * Represents an activity planned at a destination. This class stores the
  * activity name and provides methods to get and change it. Activities are
@@ -24,28 +25,39 @@ public class Activity
     {
         this.name = name;
     }
-    public Activity(String name, LocalDate date, LocalTime time, 
-        double estimatedCost) {
+
+
+    public Activity(
+        String name,
+        LocalDate date,
+        LocalTime time,
+        double estimatedCost)
+    {
         setName(name);
         setDate(date);
         setTime(time);
         setEstimatedCost(estimatedCost);
     }
 
+
     public LocalDate getDate()
     {
         return date;
     }
-    
+
+
     public double getEstimatedCost()
     {
         return estimatedCost;
     }
+
+
     public LocalTime getTime()
     {
         return time;
     }
-    
+
+
     public void setDate(LocalDate date)
     {
         if (date == null)
@@ -54,7 +66,8 @@ public class Activity
         }
         this.date = date;
     }
-    
+
+
     public void setTime(LocalTime time)
     {
         if (time == null)
@@ -63,7 +76,8 @@ public class Activity
         }
         this.time = time;
     }
-    
+
+
     public void setEstimatedCost(double estimatedCost)
     {
         if (!InputValidator.isValidCost(estimatedCost))
@@ -72,10 +86,10 @@ public class Activity
         }
         this.estimatedCost = estimatedCost;
     }
-    
-    
+
+
     /** Returns the activity name. */
- 
+
     public String getName()
     {
         return name;
@@ -89,7 +103,7 @@ public class Activity
         {
             throw new IllegalArgumentException("Name cannot be null");
         }
-        
+
         this.name = name;
     }
 
