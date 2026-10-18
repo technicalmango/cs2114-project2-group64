@@ -9,9 +9,25 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Saves and loads trips using CSV records.
+ *
+ * Assumes Destination provides:
+ * Destination(String name)
+ * Destination(String name, LocalDate arrival, LocalDate departure)
+ * getArrivalDate(), getDepartureDate()
+ *
+ * Assumes Activity provides:
+ * Activity(String name)
+ * Activity(String name, LocalDate date, LocalTime time, double cost)
+ * getDate(), getTime(), getCost()
+ */
 public class TripFileManager
 {
     private final Path file;
@@ -87,9 +103,8 @@ public class TripFileManager
     }
 
 
-    /*
-     * Writes all destinations and their associated activities to the specified
-     * CSV writer
+    /**
+     * Writes destinations, including arrival and departure dates.
      */
     private void saveDestinations(RoadTrip trip, BufferedWriter writer)
         throws IOException
@@ -98,30 +113,50 @@ public class TripFileManager
         {
             Destination destination = trip.getDestination(i);
 
-            writeRecord(writer, "DESTINATION", destination.getName());
+            writeRecord(
+                writer,
+                "DESTINATION",
+                destination.getName(),
+                optionalText(destination.getArrivalDate()),
+                optionalText(destination.getDepartureDate()));
 
             saveActivities(destination, writer);
         }
     }
 
 
-    /*
-     * Writes all activities belonging to a destination
+    /**
+     * Writes activities, including dates, times, and costs.
      */
-    private void saveActivities(Destination destination, BufferedWriter writer)
+    private void saveActivities(
+        Destination destination,
+        BufferedWriter writer)
         throws IOException
     {
         for (int i = 0; i < destination.getActivityCount(); i++)
         {
             Activity activity = destination.getActivity(i);
+            double cost = activity.getCost();
 
-            writeRecord(writer, "ACTIVITY", activity.getName());
+            if (!Double.isFinite(cost) || cost < 0)
+            {
+                throw new IOException(
+                    "Invalid cost for activity: " + activity.getName());
+            }
+
+            writeRecord(
+                writer,
+                "ACTIVITY",
+                activity.getName(),
+                optionalText(activity.getDate()),
+                optionalText(activity.getTime()),
+                Double.toString(cost));
         }
     }
 
 
     /**
-     * Loads a saved trip from CSV.
+     * Loads both legacy two-field records and extended records.
      */
     public RoadTrip loadTrip()
         throws IOException
@@ -148,48 +183,102 @@ public class TripFileManager
         RoadTrip trip = null;
         Destination currentDestination = null;
 
-        for (List<String> record : records)
+        for (int i = 0; i < records.size(); i++)
         {
-            if (record.size() != 2
-                || !InputValidator.isValidName(record.get(1)))
-            {
-                throw new IOException("Malformed CSV record");
-            }
+            List<String> record = records.get(i);
 
-            String type = record.get(0);
-            String name = record.get(1);
-
-            if ("TRIP".equals(type))
+            try
             {
-                if (trip != null)
+                if (record.size() < 2
+                    || !InputValidator.isValidName(record.get(1)))
                 {
-                    throw new IOException("Duplicate trip record");
+                    throw new IOException("Missing or invalid record name");
                 }
 
-                trip = new RoadTrip(name);
-            }
-            else if ("DESTINATION".equals(type))
-            {
-                if (trip == null)
-                {
-                    throw new IOException("Destination before trip");
-                }
+                String type = record.get(0);
+                String name = record.get(1);
 
-                currentDestination = new Destination(name);
-                trip.addDestination(currentDestination);
-            }
-            else if ("ACTIVITY".equals(type))
-            {
-                if (currentDestination == null)
+                if ("TRIP".equals(type))
                 {
-                    throw new IOException("Activity before destination");
-                }
+                    requireFieldCount(record, 2);
 
-                currentDestination.addActivity(new Activity(name));
+                    if (trip != null)
+                    {
+                        throw new IOException("Duplicate trip record");
+                    }
+
+                    trip = new RoadTrip(name);
+                }
+                else if ("DESTINATION".equals(type))
+                {
+                    requireFieldCount(record, 2, 4);
+
+                    if (trip == null)
+                    {
+                        throw new IOException("Destination before trip");
+                    }
+
+                    if (record.size() == 2)
+                    {
+                        currentDestination = new Destination(name);
+                    }
+                    else
+                    {
+                        LocalDate arrival =
+                            parseOptionalDate(record.get(2));
+                        LocalDate departure =
+                            parseOptionalDate(record.get(3));
+
+                        if (arrival != null && departure != null
+                            && departure.isBefore(arrival))
+                        {
+                            throw new IOException(
+                                "Departure date cannot precede arrival date");
+                        }
+
+                        currentDestination =
+                            new Destination(name, arrival, departure);
+                    }
+
+                    trip.addDestination(currentDestination);
+                }
+                else if ("ACTIVITY".equals(type))
+                {
+                    requireFieldCount(record, 2, 5);
+
+                    if (currentDestination == null)
+                    {
+                        throw new IOException("Activity before destination");
+                    }
+
+                    Activity activity;
+
+                    if (record.size() == 2)
+                    {
+                        activity = new Activity(name);
+                    }
+                    else
+                    {
+                        LocalDate date = parseOptionalDate(record.get(2));
+                        LocalTime time = parseOptionalTime(record.get(3));
+                        double cost = parseCost(record.get(4));
+
+                        activity = new Activity(name, date, time, cost);
+                    }
+
+                    currentDestination.addActivity(activity);
+                }
+                else
+                {
+                    throw new IOException("Unknown record type: " + type);
+                }
             }
-            else
+            catch (IOException | IllegalArgumentException
+                | DateTimeParseException e)
             {
-                throw new IOException("Unknown record type: " + type);
+                throw new IOException(
+                    "Invalid CSV record " + (i + 1) + ": " + e.getMessage(),
+                    e);
             }
         }
 
@@ -205,17 +294,90 @@ public class TripFileManager
     /**
      * Writes a CSV record with proper quotation escaping.
      */
-    private static
-        void
-        writeRecord(BufferedWriter writer, String type, String name)
-            throws IOException
+    private static void writeRecord(
+        BufferedWriter writer,
+        String type,
+        String... fields)
+        throws IOException
     {
         writer.write(type);
-        writer.write(',');
-        writer.write('"');
-        writer.write(name.replace("\"", "\"\""));
-        writer.write('"');
+
+        for (String field : fields)
+        {
+            writer.write(',');
+            writer.write('"');
+            writer.write(field.replace("\"", "\"\""));
+            writer.write('"');
+        }
+
         writer.newLine();
+    }
+
+
+    /**
+     * Represents an unset date or time as an empty CSV field.
+     */
+    private static String optionalText(Object value)
+    {
+        return value == null ? "" : value.toString();
+    }
+
+
+    /**
+     * Checks that a record has a supported number of fields.
+     */
+    private static void requireFieldCount(
+        List<String> record,
+        int... allowedCounts)
+        throws IOException
+    {
+        for (int count : allowedCounts)
+        {
+            if (record.size() == count)
+            {
+                return;
+            }
+        }
+
+        throw new IOException(
+            "Incorrect number of fields for " + record.get(0)
+                + ": " + record.size());
+    }
+
+
+    /**
+     * Reads an ISO date, or null when no date is set.
+     */
+    private static LocalDate parseOptionalDate(String value)
+    {
+        return value.isEmpty() ? null : LocalDate.parse(value);
+    }
+
+
+    /**
+     * Reads an ISO time, or null when no time is set.
+     */
+    private static LocalTime parseOptionalTime(String value)
+    {
+        return value.isEmpty() ? null : LocalTime.parse(value);
+    }
+
+
+    /**
+     * Reads a required, finite, nonnegative activity cost.
+     */
+    private static double parseCost(String value)
+        throws IOException
+    {
+        double cost = Double.parseDouble(value);
+
+        if (!Double.isFinite(cost) || cost < 0)
+        {
+            throw new IOException(
+                "Activity cost must be a finite, nonnegative number");
+        }
+
+        return cost;
     }
 
 
@@ -350,5 +512,4 @@ public class TripFileManager
 
         return records;
     }
-
 }
