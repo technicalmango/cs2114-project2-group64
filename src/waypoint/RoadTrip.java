@@ -1,6 +1,8 @@
 package waypoint;
 
 import java.io.PrintStream;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
@@ -170,6 +172,82 @@ public class RoadTrip
         }
 
         return mostActive;
+    }
+
+
+    public double getTotalEstimatedCost()
+    {
+        double total = 0;
+
+        for (int i = 0; i < destinations.size(); i++)
+        {
+            Destination destination = destinations.get(i);
+
+            for (int j = 0; j < destination.getActivityCount(); j++)
+            {
+                total += destination.getActivity(j).getEstimatedCost();
+            }
+        }
+
+        return total;
+    }
+
+
+    public Destination getLongestStayDestination()
+    {
+        Destination longest = null;
+        long longestDays = 0;
+
+        for (int i = 0; i < destinations.size(); i++)
+        {
+            Destination destination = destinations.get(i);
+
+            if (destination.hasStayDates()
+                && destination.getStayDays() > longestDays)
+            {
+                longestDays = destination.getStayDays();
+                longest = destination;
+            }
+        }
+
+        return longest;
+    }
+
+
+    public long getTripDuration()
+    {
+        LocalDate earliest = null;
+        LocalDate latest = null;
+
+        for (int i = 0; i < destinations.size(); i++)
+        {
+            Destination destination = destinations.get(i);
+
+            if (!destination.hasStayDates())
+            {
+                continue;
+            }
+
+            LocalDate arrival = destination.getArrivalDate();
+            LocalDate departure = destination.getDepartureDate();
+
+            if (earliest == null || arrival.isBefore(earliest))
+            {
+                earliest = arrival;
+            }
+
+            if (latest == null || departure.isAfter(latest))
+            {
+                latest = departure;
+            }
+        }
+
+        if (earliest == null)
+        {
+            return 0;
+        }
+
+        return ChronoUnit.DAYS.between(earliest, latest) + 1;
     }
 
 

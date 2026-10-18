@@ -263,7 +263,8 @@ public class TripFileManager
                     throw new IOException("Unknown record type: " + type);
                 }
             }
-            catch (IOException | IllegalArgumentException
+            catch (IOException
+                | IllegalArgumentException
                 | DateTimeParseException e)
             {
                 throw new IOException(
