@@ -1,41 +1,25 @@
 package waypoint;
-
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
-/**
- * Represents a destination and its planned activities.
- */
 public class Destination
 {
+    // ~ Fields ................................................................
     private String name;
+    private LinkedChain<Activity> activities;
+    // Optional stay dates. They remain null until entered.
     private LocalDate arrivalDate;
     private LocalDate departureDate;
-    private LinkedChain<Activity> activities;
+    // ~ Constructors ..........................................................
 
-    /**
-     * Creates a destination without scheduled dates.
-     * Supports older saved files.
-     */
     public Destination(String name)
     {
-        this(name, null, null);
-    }
-
-
-    /**
-     * Creates a destination with optional arrival and departure dates.
-     */
-    public Destination(
-        String name,
-        LocalDate arrivalDate,
-        LocalDate departureDate)
-    {
         setName(name);
-        setDates(arrivalDate, departureDate);
         activities = new LinkedChain<Activity>();
     }
 
 
+    // ~Public Methods ........................................................
     public String getName()
     {
         return name;
@@ -44,78 +28,36 @@ public class Destination
 
     public void setName(String name)
     {
-        if (!InputValidator.isValidName(name))
+        if (name == null || name.trim().isEmpty())
         {
             throw new IllegalArgumentException(
                 "Destination name cannot be null or blank");
-        }
 
+        }
         this.name = name.trim();
     }
 
 
-    public LocalDate getArrivalDate()
+    public void addActivity(Activity a)
     {
-        return arrivalDate;
-    }
-
-
-    public LocalDate getDepartureDate()
-    {
-        return departureDate;
-    }
-
-
-    /**
-     * Updates both dates together.
-     * Null means that the date has not been scheduled.
-     */
-    public void setDates(LocalDate arrival, LocalDate departure)
-    {
-        if (arrival != null && departure != null
-            && !InputValidator.isValidDateRange(arrival, departure))
-        {
-            throw new IllegalArgumentException(
-                "Departure date cannot precede arrival date");
-        }
-
-        arrivalDate = arrival;
-        departureDate = departure;
-    }
-
-
-    public void setArrivalDate(LocalDate arrival)
-    {
-        setDates(arrival, departureDate);
-    }
-
-
-    public void setDepartureDate(LocalDate departure)
-    {
-        setDates(arrivalDate, departure);
-    }
-
-
-    public void addActivity(Activity activity)
-    {
-        if (activity == null)
+        if (a == null)
         {
             throw new IllegalArgumentException("Activity cannot be null");
         }
-
-        activities.add(activity);
+        // Preserve the order activities were added.
+        activities.addToEnd(a);
     }
 
 
-    public Activity getActivity(int position)
+    public Activity getActivity(int p)
     {
-        return activities.get(position);
+        return activities.get(p);
     }
 
 
-    public Activity removeActivity(int position)
+    public Activity removeActivity(int p)
     {
-        return activities.remove(position);
+        return activities.remove(p);
     }
 
 
@@ -131,41 +73,107 @@ public class Destination
     }
 
 
-    /**
-     * Destinations remain equal when their names match.
-     */
-    @Override
-    public boolean equals(Object obj)
+    public boolean equals(Object o)
     {
-        if (this == obj)
+        if (this == o)
         {
             return true;
         }
-
-        if (obj == null || getClass() != obj.getClass())
+        if (o == null || getClass() != o.getClass())
         {
             return false;
         }
-
-        Destination other = (Destination)obj;
-        return name.equals(other.name);
+        Destination s = (Destination)o;
+        return name.equals(s.name);
     }
 
 
-    @Override
     public int hashCode()
     {
         return name.hashCode();
     }
 
 
-    /**
-     * Keeps the existing text representation.
-     * The application displays scheduling details separately.
-     */
-    @Override
     public String toString()
     {
         return name + " (" + getActivityCount() + " activities)";
     }
+
+    /** Returns the arrival date, or null if not entered. */
+public LocalDate getArrivalDate()
+{
+    return arrivalDate;
+}
+
+/** Returns the departure date, or null if not entered. */
+public LocalDate getDepartureDate()
+{
+    return departureDate;
+}
+
+/** Sets arrival without allowing it to fall after departure. */
+public void setArrivalDate(LocalDate arrival)
+{
+    if (arrival == null)
+    {
+        throw new IllegalArgumentException("Arrival date is required.");
+    }
+
+    if (departureDate != null && arrival.isAfter(departureDate))
+    {
+        throw new IllegalArgumentException(
+            "Arrival cannot be after departure.");
+    }
+
+    arrivalDate = arrival;
+}
+
+/** Sets departure without allowing it to fall before arrival. */
+public void setDepartureDate(LocalDate departure)
+{
+    if (departure == null)
+    {
+        throw new IllegalArgumentException("Departure date is required.");
+    }
+
+    if (arrivalDate != null && departure.isBefore(arrivalDate))
+    {
+        throw new IllegalArgumentException(
+            "Departure cannot be before arrival.");
+    }
+
+    departureDate = departure;
+}
+
+/** Changes both dates together, validating before changing either field. */
+public void setStayDates(LocalDate arrival, LocalDate departure)
+{
+    if (!InputValidator.isValidDateRange(arrival, departure))
+    {
+        throw new IllegalArgumentException(
+            "Both dates are required, and departure cannot precede arrival.");
+    }
+
+    // Assign only after validation succeeds.
+    arrivalDate = arrival;
+    departureDate = departure;
+}
+
+/** Reports whether both stay dates have been entered. */
+public boolean hasStayDates()
+{
+    return arrivalDate != null && departureDate != null;
+}
+
+/** Counts both arrival and departure days; returns 0 for unknown dates. */
+public long getStayDays()
+{
+    if (!hasStayDates())
+    {
+        return 0;
+    }
+
+    // A same-day visit counts as one day.
+    return ChronoUnit.DAYS.between(arrivalDate, departureDate) + 1;
+}
 }
