@@ -2,6 +2,10 @@ package waypoint;
 
 import java.io.PrintStream;
 import java.util.Scanner;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
+import java.util.List;
 
 /**
  * Runs the WayPoint road-trip planning application.
@@ -73,7 +77,7 @@ public class WayPointApp
         while (running)
         {
             displayMainMenu();
-            int choice = readInt("Choose an option: ", 0, 9);
+            int choice = readInt("Choose an option: ", 0, 11);
 
             switch (choice)
             {
@@ -102,6 +106,13 @@ public class WayPointApp
                     viewActivities();
                     break;
                 case 9:
+                    viewTripSummary();
+                    break;
+
+                case 10:
+                    setDestinationDates();
+                    break;
+                case 11:
                     running = !saveAndExit();
                     break;
                 case 0:
@@ -137,7 +148,9 @@ public class WayPointApp
         output.println("6. Add an activity");
         output.println("7. Remove an activity");
         output.println("8. View activities");
-        output.println("9. Save and exit");
+        output.println("9. View trip summary");
+        output.println("10. Set destination dates");
+        output.println("11. Save and exit");
         output.println("0. Exit without saving");
         output.println();
     }
@@ -259,10 +272,39 @@ public class WayPointApp
             return;
         }
 
-        String name = readName("Enter the activity name: ");
-        destination.addActivity(new Activity(name));
+        if (destination.getArrivalDate() == null
+            || destination.getDepartureDate() == null)
+        {
+            output
+                .println("Set the destination dates before adding activities.");
+            return;
+        }
 
-        output.print("Activity added.");
+        String name = readName("Enter the activity name: ");
+
+        while (true)
+        {
+            LocalDate date = readDate("Enter activity date (YYYY-MM-DD): ");
+
+            if (date.isBefore(destination.getArrivalDate())
+                || date.isAfter(destination.getDepartureDate()))
+            {
+                output.println(
+                    "Activity date must be within the destination stay.");
+                continue;
+            }
+
+            LocalTime time = readTime("Enter activity time (HH:MM): ");
+
+            double cost = readCost("Enter estimated activity cost: ");
+
+            Activity activity = new Activity(name, date, time, cost);
+
+            destination.addActivity(activity);
+
+            output.println("Activity added.");
+            return;
+        }
     }
 
 
@@ -280,20 +322,39 @@ public class WayPointApp
 
         if (!destination.hasActivities())
         {
-            output.print("This destination has no activities.");
+            output.println("This destination has no activities.");
             return;
         }
 
-        displayActivities(destination);
+        List<Activity> sorted = destination.getActivitiesChronologically();
 
-        int position = readInt(
-            "Enter the activity number to remove: ",
-            1,
-            destination.getActivityCount());
+        output.println("\nActivities in " + destination.getName());
 
-        Activity removed = destination.removeActivity(position - 1);
+        for (int i = 0; i < sorted.size(); i++)
+        {
+            Activity activity = sorted.get(i);
 
-        output.print("Removed: " + removed.getName());
+            output.println(
+                (i + 1) + ". " + activity.getName() + " - " + activity.getDate()
+                    + " at " + activity.getTime());
+        }
+
+        int position =
+            readInt("Enter the activity number to remove: ", 1, sorted.size());
+
+        Activity selected = sorted.get(position - 1);
+
+        for (int i = 0; i < destination.getActivityCount(); i++)
+        {
+            if (destination.getActivity(i) == selected)
+            {
+                Activity removed = destination.removeActivity(i);
+
+                output.println("Removed: " + removed.getName());
+                return;
+            }
+        }
+        ;
     }
 
 
@@ -304,10 +365,36 @@ public class WayPointApp
     {
         Destination destination = selectDestination();
 
-        if (destination != null)
+        if (destination == null)
         {
-            displayActivities(destination);
+            return;
         }
+
+        output.println("\nActivities in " + destination.getName());
+
+        if (!destination.hasActivities())
+        {
+            output.println("No activities planned.");
+            return;
+        }
+
+        List<Activity> sorted = destination.getActivitiesChronologically();
+
+        for (int i = 0; i < sorted.size(); i++)
+        {
+            Activity activity = sorted.get(i);
+
+            output.println((i + 1) + ". " + activity.getName());
+
+            output.println("   Date: " + activity.getDate());
+
+            output.println("   Time: " + activity.getTime());
+
+            output.printf(
+                "   Estimated cost: $%.2f%n",
+                activity.getEstimatedCost());
+        }
+
     }
 
 
@@ -332,9 +419,9 @@ public class WayPointApp
         }
         catch (Exception exception)
         {
-            System.out
-                .print("Could not save the trip: " + exception.getMessage());
-            output.print("Your trip is still open.");
+            output
+                .println("Could not save the trip: " + exception.getMessage());
+            output.println("Your trip is still open.");
             return false;
         }
     }
@@ -429,6 +516,77 @@ public class WayPointApp
 
 
     /**
+     * Sets the arrival and departure dates for a destination.
+     */
+    public void setDestinationDates()
+    {
+        Destination destination = selectDestination();
+
+        if (destination == null)
+        {
+            return;
+        }
+
+        while (true)
+        {
+            LocalDate arrival = readDate("Enter arrival date (YYYY-MM-DD): ");
+
+            LocalDate departure =
+                readDate("Enter departure date (YYYY-MM-DD): ");
+
+            try
+            {
+                destination.setStayDates(arrival, departure);
+
+                output.println("Destination dates updated.");
+                return;
+            }
+            catch (IllegalArgumentException exception)
+            {
+                output.println(exception.getMessage());
+                output.println("Please enter valid dates.");
+            }
+        }
+    }
+
+
+    public void viewTripSummary()
+    {
+        if (!requireTrip())
+        {
+            return;
+        }
+
+        output.println("\n===== TRIP SUMMARY =====");
+        output.println("Trip: " + currentTrip.getName());
+
+        output.println("Destinations: " + currentTrip.getDestinationCount());
+
+        output.println("Activities: " + currentTrip.getTotalActivities());
+
+        output.println("Duration: " + currentTrip.getTripDuration() + " days");
+
+        output.printf(
+            "Estimated activity cost: $%.2f%n",
+            currentTrip.getTotalEstimatedCost());
+
+        Destination mostActive = currentTrip.getMostActiveDestination();
+
+        if (mostActive != null)
+        {
+            output.println("Most activities: " + mostActive.getName());
+        }
+
+        Destination longest = currentTrip.getLongestStayDestination();
+
+        if (longest != null)
+        {
+            output.println("Longest stay: " + longest.getName());
+        }
+    }
+
+
+    /**
      * Reads a nonblank name.
      *
      * @param prompt
@@ -492,4 +650,70 @@ public class WayPointApp
             output.println();
         }
     }
+
+
+    private LocalDate readDate(String prompt)
+    {
+        while (true)
+        {
+            output.print(prompt);
+
+            String input = scanner.nextLine().trim();
+
+            try
+            {
+                return LocalDate.parse(input);
+            }
+            catch (DateTimeParseException exception)
+            {
+                output.println("Invalid date. Use YYYY-MM-DD.");
+            }
+        }
+    }
+
+
+    private LocalTime readTime(String prompt)
+    {
+        while (true)
+        {
+            output.print(prompt);
+
+            String input = scanner.nextLine().trim();
+
+            try
+            {
+                return LocalTime.parse(input);
+            }
+            catch (DateTimeParseException exception)
+            {
+                output.println("Invalid time. Use HH:MM (24-hour format).");
+            }
+        }
+    }
+
+
+    private double readCost(String prompt)
+    {
+        while (true)
+        {
+            output.print(prompt);
+
+            try
+            {
+                double cost = Double.parseDouble(scanner.nextLine().trim());
+
+                if (InputValidator.isValidCost(cost))
+                {
+                    return cost;
+                }
+            }
+            catch (NumberFormatException exception)
+            {
+                // Invalid numeric input; show error below.
+            }
+
+            output.println("Enter a valid nonnegative cost.");
+        }
+    }
+
 }
