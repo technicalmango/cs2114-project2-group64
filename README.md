@@ -2,124 +2,296 @@
 
 ## Project Overview
 
-WayPoint is a Java-based, console application that allows users to create and manage a road trip itinerary. Users can organize destinations in travel order and add activities to individual destinations. The application also supports saving and loading trip information using a CSV file.
+WayPoint is a Java-based console application that allows users to create and manage road trip itineraries. Users can organize destinations in travel order, add activities to individual destinations, and view a summary of their planned trip.
 
-The project was developed for CS 2114: Software Design & Data Structures at Virginia Tech.
+The application also supports scheduling activities with dates, times, and estimated costs, as well as saving and loading trip information between sessions using CSV persistence.
+
+WayPoint was developed by Group 64 for **CS 2114: Software Design & Data Structures at Virginia Tech**.
+
+**Team Members:** Connor Bo, Alexander Kyle, Essan Salem, and Jovany Velazquez.
 
 ## Implemented Features
 
-The following Minimum Viable Product (MVP) features have been implemented:
+### Minimum Viable Product (MVP)
+
+The following core features have been implemented:
 
 - Create and name a road trip.
-- Add destinations to the itinerary.
+- Add destinations to the end of an itinerary.
 - Insert destinations at specific positions.
-- Remove destinations.
+- Remove destinations from the itinerary.
 - View destinations in travel order.
-- Add activities to destinations.
+- Add activities to individual destinations.
 - Remove activities from destinations.
 - View activities associated with a destination.
-- Save and load trip information using CSV persistence.
-- Validate user input and handle invalid menu selections and positions.
+- Display a trip summary showing the number of destinations and total number of activities.
+- Validate user input and handle invalid menu selections, names, and positions.
 
-### Data Structures
+The trip summary also identifies the destination with the most activities.
 
-WayPoint uses the generic `LinkedChain<T>` data structure for two different element types:
+### Stretch Goal 1: CSV Persistence
 
-- `LinkedChain<Destination>` stores the ordered destinations in a `RoadTrip`.
-- `LinkedChain<Activity>` stores the activities associated with each `Destination`.
+WayPoint supports CSV file persistence, allowing users to save their road trip information and reload it between application sessions.
 
-Application classes interact with these chains through the public methods of `LinkedChain<T>` rather than directly accessing its internal nodes.
+This functionality includes:
+
+- Saving the trip name and destinations in travel order.
+- Saving activities associated with each destination.
+- Preserving destination arrival and departure dates.
+- Preserving activity dates, times, and estimated costs.
+- Attempting to load an existing saved trip when the application starts.
+- Handling errors during file loading and saving.
+- Allowing users to exit with or without saving changes.
+
+The `TripFileManager` class manages CSV file operations, separating persistence logic from the application's main functionality.
+
+### Stretch Goal 2: Activity Scheduling
+
+WayPoint includes activity scheduling functionality that allows users to create more detailed travel itineraries.
+
+This functionality includes:
+
+- Setting arrival and departure dates for destinations.
+- Scheduling activities with a name, date, time, and estimated cost.
+- Validating that activities fall within their destination's scheduled stay.
+- Rejecting invalid date ranges, times, and estimated costs.
+- Displaying scheduled activities in chronological order.
+- Incorporating scheduling information into the trip summary.
+
+The expanded trip summary displays the total trip duration, total estimated activity cost, and destination with the longest stay.
+
+Trip duration is calculated using the earliest destination arrival date and latest departure date, including both dates.
+
+### Features Not Implemented
+
+The team originally considered integrating a mapping API to provide route information, driving distances, and estimated travel times between destinations.
+
+However, we decided not to implement this feature because of time constraints and the additional complexity involved in integrating an external API.
+
+## Data Structures and Class Design
+
+WayPoint uses the generic `LinkedChain<T>` data structure to manage destinations and activities.
+
+The same generic class is reused for two different element types:
+
+- `LinkedChain<Destination>` stores destinations in travel order within a `RoadTrip`.
+- `LinkedChain<Activity>` stores activities associated with each `Destination`.
+
+Each destination maintains its own linked chain of activities, creating a nested data structure.
+
+Application classes interact with these chains through the public methods of `LinkedChain<T>` rather than directly accessing internal nodes.
+
+### Main Classes
+
+| Class | Responsibility |
+|---|---|
+| `RoadTrip` | Stores the trip name and ordered destinations, manages destination operations, and calculates trip summary information. |
+| `Destination` | Represents a destination, manages its activities, and stores arrival and departure dates. |
+| `Activity` | Represents an activity with a name, date, time, and estimated cost. |
+| `LinkedChain<T>` | Generic linked-chain data structure used for storing destinations and activities. |
+| `InputValidator` | Validates user input, including names, positions, dates, and costs. |
+| `TripFileManager` | Handles saving and loading trip information using CSV files. |
+| `WayPointApp` | Provides the console interface, processes user input, and coordinates interactions between classes. |
+
+This design separates data storage, application logic, input validation, file persistence, and user interaction.
 
 ## How to Compile and Run
 
 ### Running the Application
 
 1. Import the WayPoint project into Eclipse.
-2. Confirm that the project uses Java 17 and that all required dependencies are configured.
+2. Confirm that the project uses Java 17 and that the required dependencies are configured.
 3. Open `WayPointApp.java`.
 4. Right-click the file and select **Run As → Java Application**.
 5. Follow the console menu prompts to create and manage a trip.
 
-The program attempts to load an existing saved trip when it starts. Selecting **9. Save and exit** saves the current trip to `waypoint-trip.csv`. Selecting **0. Exit without saving** requires confirmation.
+When the application starts, it attempts to load an existing saved trip.
+
+### Console Menu
+
+The application provides the following menu options:
+
+| Option | Action |
+|---|---|
+| 1 | Create a new trip |
+| 2 | Add a destination |
+| 3 | Insert a destination |
+| 4 | Remove a destination |
+| 5 | View destinations |
+| 6 | Add an activity |
+| 7 | Remove an activity |
+| 8 | View activities |
+| 9 | View trip summary |
+| 10 | Set destination arrival and departure dates |
+| 11 | Save and exit |
+| 0 | Exit without saving |
+
+Selecting **11. Save and exit** saves the current trip to `waypoint-trip.csv`.
+
+Selecting **0. Exit without saving** allows the user to exit without saving changes, following the application's confirmation process.
+
+### Saving and Loading
+
+WayPoint uses CSV persistence to store trip information between sessions.
+
+The saved information includes the trip name, destinations, destination dates, activities, activity dates and times, and estimated costs.
+
+The `TripFileManager` class handles reading and writing the CSV file.
+
+## Testing and Error Handling
+
+WayPoint uses unit tests based on `student.TestCase` to verify application functionality and error handling.
+
+Testing focuses on normal operations and invalid-input scenarios.
+
+### Functionality Tested
+
+Testing covers the following areas:
+
+- Creating and renaming trips.
+- Adding, inserting, retrieving, and removing destinations.
+- Adding, viewing, and removing activities.
+- Validating trip, destination, and activity names.
+- Handling invalid menu choices and positions.
+- Attempting operations when no trip or destination exists.
+- Setting valid destination arrival and departure dates.
+- Rejecting invalid destination date ranges.
+- Scheduling activities within destination stays.
+- Rejecting activities outside their destination's scheduled dates.
+- Validating activity dates, times, and estimated costs.
+- Displaying activities chronologically.
+- Calculating trip summary information.
+- Saving and loading trip information.
+- Handling file-loading and saving errors.
+- Exiting with or without saving.
+
+### Testing Approach
+
+Each test class focuses on a specific application component.
+
+Tests use valid inputs to verify expected behavior and invalid inputs to check that errors are handled appropriately.
+
+Application-level tests use simulated console input and a fake file manager to test user interactions without modifying real CSV files.
+
+One important detail is that the console interface displays destination and activity positions beginning at 1, while the underlying linked chains use zero-based indices. Tests help verify that these positions are converted correctly.
+
+The application also uses an injected output stream (`output.println()`) rather than relying exclusively on `System.out.println()`. This makes console output easier to capture and verify during testing.
 
 ### Running the Tests
 
 1. Open the project in Eclipse.
 2. Locate the test classes in the `waypoint` package.
-3. Right-click a test class, such as `WayPointAppTest.java`.
-4. Select the course-supported test runner (for example, **Run As → JUnit Test**).
-5. Review the test results in Eclipse.
+3. Right-click a test class, such as `RoadTripTest.java` or `WayPointAppTest.java`.
+4. Select **Run As → JUnit Test** using the configured course-supported testing environment.
+5. Review the results and resolve any failures.
 
-Tests use `student.TestCase` assertions. The application tests use simulated console input and a fake file manager to avoid modifying real CSV files.
+## Development Process and Reflection
 
-## Testing and Error Handling
+### From Specification to Prototype
 
-Testing covers normal operations and invalid-input scenarios, including:
+During the initial development stage, our team focused on translating the planned class design into a functioning Java application.
 
-- Invalid menu choices and nonnumeric input.
-- Blank trip and destination names.
-- Attempting operations before creating a trip.
-- Attempting destination operations when no destinations exist.
-- Adding, inserting, and removing destinations.
-- Adding, viewing, and removing activities.
-- Attempting to remove activities from an empty destination.
-- Canceling or confirming trip replacement.
-- Loading an existing trip.
-- Recovering from file-loading errors.
-- Handling save failures and retrying.
-- Exiting with or without saving.
+One of the main challenges was establishing how the `RoadTrip`, `Destination`, and `Activity` classes would communicate while using the generic linked-chain data structure.
 
-User-facing positions are converted to zero-based indices before accessing the underlying linked chains.
+We prioritized implementing the core MVP features before expanding the application with additional functionality.
 
-## Reflection
+We also moved the trip summary from an originally proposed stretch goal into the MVP because basic summary information could be calculated using the existing destination and activity data.
 
-During implementation, our team focused on developing a functional console-based road trip planner and integrating the generic linked-chain data structure into the application.
+### From Prototype to Final Implementation
 
-One important change was simplifying the original project scope to prioritize the MVP. Instead of implementing more advanced scheduling or route-planning features immediately, we focused on reliable destination and activity management, user input validation, and CSV persistence.
+After implementing the MVP, we expanded the application with CSV persistence and activity scheduling.
 
-We also refined how the application handles destination and activity positions. The user interface displays positions beginning at 1, while the underlying data structure uses zero-based indices. This required careful conversion when retrieving, inserting, and removing elements.
+CSV persistence required us to develop file-saving and loading functionality that could preserve the nested structure of trips, destinations, and activities.
 
-Testing revealed additional issues involving scripted console input, menu behavior, and output formatting. We updated the test cases to match the implemented application and used dependency injection to test the application without reading or writing actual CSV files.
+Activity scheduling required additional fields, date validation, chronological activity display, and updates to the trip summary.
 
-Overall, this stage helped us better understand how to organize a Java application into separate classes, reuse a generic data structure, and test interactions between application components.
+Integrating these features introduced challenges because changes to one class often affected other parts of the application.
 
-## Next Steps
+One recurring issue involved inconsistencies between files developed by different group members, including mismatched method names, parameters, and expected behavior.
 
-Our next priorities are to:
+We addressed these issues by reviewing class interfaces, debugging integration errors, and testing interactions between components.
 
-1. Continue expanding unit tests and verifying edge cases.
-2. Improve console output formatting.
-3. Further test CSV persistence, including malformed or incomplete saved files.
-4. Implement activity scheduling with dates and times, including validation of chronological order.
-5. Add a trip summary displaying information such as total destinations, total activities, and the destination with the most activities.
-6. Refine the user interface and improve overall usability.
+### What Went Well
 
-The activity scheduling and trip summary features were considered as stretch goals and are not part of the current completed MVP.
+Our team successfully implemented the MVP and the two selected stretch goals.
+
+We also successfully reused the same generic linked-chain implementation for both destinations and activities.
+
+Separating responsibilities between classes made the application easier to organize, maintain, and test.
+
+### What Could Have Gone Better
+
+One of our biggest challenges was coordinating the implementation of different classes across multiple team members.
+
+Differences between method definitions and method calls caused integration errors that required additional debugging.
+
+Introducing new functionality also required changes to existing classes and tests, making it important to verify that previously implemented features continued working.
+
+In future projects, we would establish and agree on class contracts earlier, integrate changes more frequently, and test individual components before combining larger features.
+
+### What We Learned About Generics and Reuse
+
+At the beginning of the project, we understood generics primarily as a way to make classes work with different data types.
+
+Through WayPoint, we developed a better understanding of how generics support reusable software design.
+
+By using `LinkedChain<T>` for both destinations and activities, we were able to reuse one data structure while maintaining compile-time type safety.
+
+We also learned that reusable code requires well-defined method contracts because multiple classes depend on the same implementation.
+
+Overall, the project strengthened our understanding of generic data structures, object-oriented design, integration testing, input validation, file persistence, and collaborative development.
+
+## Future Improvements
+
+Although the MVP and the two selected stretch goals have been implemented, several features could be added in the future:
+
+1. **Mapping API integration:** Calculate driving distances, travel times, and routes between destinations.
+2. **Additional travel expenses:** Include transportation, lodging, and gas costs in trip estimates.
+3. **Graphical user interface:** Replace or supplement the console interface with a more interactive design.
+4. **Advanced activity scheduling:** Detect overlapping activities and improve scheduling conflict validation.
+5. **Multiple saved trips:** Allow users to save and load multiple itineraries rather than relying on a single saved trip.
+6. **Further testing:** Expand edge-case coverage and improve handling of malformed or incomplete CSV files.
+
+These are potential future improvements and are not part of the current implemented functionality.
 
 ## Attribution
 
-The following table documents the project files and their contributors. **Replace the bracketed entries with the actual contributors before submitting.**
+The following table documents the project files and their primary contributors.
 
 | File | Contributor(s) | Contribution |
 |---|---|---|
-| `Activity.java` | Alex | Activity model and validation |
-| `ActivityTest.java` | Alex| Unit tests for Activity |
-| `Destination.java` | Connor| Destination model and activity management |
+| `Activity.java` | Alex | Activity model, scheduling fields, and validation |
+| `ActivityTest.java` | Alex | Unit tests for Activity |
+| `Destination.java` | Connor | Destination model, activity management, and stay scheduling |
 | `DestinationTest.java` | Connor | Unit tests for Destination |
-| `RoadTrip.java` | Jovany | Road trip model and destination management |
+| `RoadTrip.java` | Jovany | Road trip model, destination management, and trip summary calculations |
 | `RoadTripTest.java` | Jovany | Unit tests for RoadTrip |
-| `LinkedChain.java` | Course-provided | Generic linked-chain implementation and any team modifications |
+| `LinkedChain.java` | Course-provided | Generic linked-chain implementation and team modifications |
 | `LinkedChainTest.java` | Essan | Linked-chain tests |
 | `InputValidator.java` | Essan | Input validation methods |
 | `InputValidatorTest.java` | Essan | Input validation tests |
 | `TripFileManager.java` | Essan | CSV saving and loading |
 | `TripFileManagerTest.java` | Essan | Persistence tests |
-| `WayPointApp.java` | Jovany | Console menu and application interaction |
-| `WayPointAppTest.java` | Jovany | Scripted application tests and fake file manager |
-
+| `WayPointApp.java` | Jovany | Console interface, menu operations, and application interaction |
+| `WayPointAppTest.java` | Jovany | Scripted console tests and fake file manager |
 
 ## Generative AI Usage
 
-Generative AI was used as a development aid for explaining Java concepts, identifying potential bugs, suggesting code improvements, and assisting with the creation and revision of test cases and documentation.
+Generative AI was used throughout development as a tool for brainstorming, explaining Java concepts, troubleshooting bugs, and assisting with testing and documentation.
 
-AI-generated suggestions were reviewed and adapted to the project's existing class design and requirements. Team members remained responsible for understanding, integrating, testing, and verifying the submitted implementation.
+Specifically, our team used generative AI to:
+
+- Brainstorm possible class designs and implementation approaches.
+- Help identify and troubleshoot complex bugs.
+- Assist in developing test methods for more complicated functionality.
+- Suggest improvements to code organization and documentation.
+
+Our team reviewed AI-generated suggestions against the project's existing class design and method signatures.
+
+We also ran and reviewed tests, debugged integration errors, and verified expected application behavior.
+
+One important lesson was recognizing the risks of relying too heavily on generative AI, particularly when generating test methods or implementing linked-chain operations before fully understanding the underlying concepts.
+
+In future projects, we would use generative AI primarily for explanations, brainstorming, and debugging guidance while placing greater emphasis on independently understanding and implementing the code.
+
+Team members remained responsible for reviewing, integrating, testing, and verifying the final implementation.
