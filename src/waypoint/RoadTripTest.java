@@ -1,57 +1,167 @@
+
 package waypoint;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import student.TestCase;
+
 /**
- * Tests RoadTrip without requiring JUnit. Run this class as a Java Application.
+ * Tests the RoadTrip class using student.TestCase.
  *
  * @author Jovany
- * @version 2.0
+ * @version October 2026
  */
 public class RoadTripTest
+    extends TestCase
 {
-    private static int checks;
+    private RoadTrip trip;
 
     /**
-     * Runs the test cases.
-     *
-     * @param args
-     *            unused
+     * Sets up a new trip before each test.
      */
-    public static void main(String[] args)
+    public void setUp()
     {
-        RoadTrip trip = new RoadTrip("  Fall Trip  ");
+        trip = new RoadTrip("  Fall Trip  ");
+    }
 
-        check("Fall Trip".equals(trip.getName()), "Constructor trims the name");
 
-        check(
-            trip.isEmpty() && trip.getDestinationCount() == 0,
-            "New trip is empty");
+    /**
+     * Tests the constructor and initial trip information.
+     */
+    public void testConstructor()
+    {
+        assertEquals("Fall Trip", trip.getName());
+        assertTrue(trip.isEmpty());
+        assertEquals(0, trip.getDestinationCount());
+        assertEquals(0, trip.getTotalActivities());
+        assertNull(trip.getMostActiveDestination());
+        assertTrue(trip.toString().contains("No destinations"));
+    }
 
-        check(trip.getTotalActivities() == 0, "Empty trip has zero activities");
 
-        check(
-            trip.getMostActiveDestination() == null,
-            "Empty trip has no most-active destination");
+    /**
+     * Tests rejecting invalid trip names.
+     */
+    public void testInvalidConstructor()
+    {
+        Exception exception = null;
 
-        check(
-            trip.toString().contains("No destinations"),
-            "Empty trip displays correctly");
+        try
+        {
+            new RoadTrip(null);
+        }
+        catch (IllegalArgumentException e)
+        {
+            exception = e;
+        }
 
-        expect(IllegalArgumentException.class, () -> new RoadTrip(null));
+        assertNotNull(exception);
 
-        expect(IllegalArgumentException.class, () -> new RoadTrip("  "));
+        exception = null;
 
-        expect(IllegalArgumentException.class, () -> trip.setName(null));
+        try
+        {
+            new RoadTrip("  ");
+        }
+        catch (IllegalArgumentException e)
+        {
+            exception = e;
+        }
 
-        expect(IllegalArgumentException.class, () -> trip.setName("\t"));
+        assertNotNull(exception);
+    }
 
-        check(
-            "Fall Trip".equals(trip.getName()),
-            "Invalid rename preserves the original name");
 
+    /**
+     * Tests changing a trip's name.
+     */
+    public void testSetName()
+    {
         trip.setName("Spring Trip");
 
-        check("Spring Trip".equals(trip.getName()), "Valid rename succeeds");
+        assertEquals("Spring Trip", trip.getName());
+    }
 
+
+    /**
+     * Tests rejecting invalid name changes.
+     */
+    public void testSetNameInvalid()
+    {
+        Exception exception = null;
+
+        try
+        {
+            trip.setName(null);
+        }
+        catch (IllegalArgumentException e)
+        {
+            exception = e;
+        }
+
+        assertNotNull(exception);
+
+        exception = null;
+
+        try
+        {
+            trip.setName("\t");
+        }
+        catch (IllegalArgumentException e)
+        {
+            exception = e;
+        }
+
+        assertNotNull(exception);
+        assertEquals("Fall Trip", trip.getName());
+    }
+
+
+    /**
+     * Tests adding destinations to a trip.
+     */
+    public void testAddDestination()
+    {
+        Destination a = new Destination("Richmond");
+        Destination b = new Destination("Boston");
+
+        trip.addDestination(a);
+        trip.addDestination(b);
+
+        assertEquals(2, trip.getDestinationCount());
+        assertFalse(trip.isEmpty());
+
+        assertSame(a, trip.getDestination(0));
+        assertSame(b, trip.getDestination(1));
+    }
+
+
+    /**
+     * Tests rejecting a null destination.
+     */
+    public void testAddDestinationNull()
+    {
+        Exception exception = null;
+
+        try
+        {
+            trip.addDestination(null);
+        }
+        catch (IllegalArgumentException e)
+        {
+            exception = e;
+        }
+
+        assertNotNull(exception);
+        assertTrue(trip.isEmpty());
+    }
+
+
+    /**
+     * Tests inserting destinations at different positions.
+     */
+    public void testInsertDestination()
+    {
         Destination a = new Destination("Richmond");
         Destination b = new Destination("DC");
         Destination c = new Destination("Boston");
@@ -62,174 +172,354 @@ public class RoadTripTest
         trip.insertDestination(1, b);
         trip.insertDestination(3, duplicate);
 
-        check(
-            trip.getDestinationCount() == 4 && !trip.isEmpty(),
-            "Destination count updates");
+        assertEquals(4, trip.getDestinationCount());
+        assertSame(a, trip.getDestination(0));
+        assertSame(b, trip.getDestination(1));
+        assertSame(c, trip.getDestination(2));
+        assertSame(duplicate, trip.getDestination(3));
+    }
 
-        check(trip.getDestination(0) == a, "Insertion at the beginning works");
 
-        check(trip.getDestination(1) == b, "Insertion in the middle works");
+    /**
+     * Tests rejecting invalid insertion positions and null values.
+     */
+    public void testInsertDestinationInvalid()
+    {
+        Destination a = new Destination("Richmond");
+        trip.addDestination(a);
 
-        check(trip.getDestination(2) == c, "Appending preserves order");
+        Exception exception = null;
 
-        check(
-            trip.getDestination(3) == duplicate,
-            "End insertion allows duplicate names");
+        try
+        {
+            trip.insertDestination(-1, a);
+        }
+        catch (IndexOutOfBoundsException e)
+        {
+            exception = e;
+        }
 
-        check(
-            trip.getMostActiveDestination() == null,
-            "Stops with no activities return null");
+        assertNotNull(exception);
 
-        expect(IllegalArgumentException.class, () -> trip.addDestination(null));
+        exception = null;
 
-        expect(
-            IllegalArgumentException.class,
-            () -> trip.insertDestination(0, null));
+        try
+        {
+            trip.insertDestination(2, a);
+        }
+        catch (IndexOutOfBoundsException e)
+        {
+            exception = e;
+        }
 
-        expect(
-            IndexOutOfBoundsException.class,
-            () -> trip.insertDestination(-1, a));
+        assertNotNull(exception);
 
-        expect(
-            IndexOutOfBoundsException.class,
-            () -> trip.insertDestination(5, a));
+        exception = null;
 
-        expect(IndexOutOfBoundsException.class, () -> trip.getDestination(-1));
+        try
+        {
+            trip.insertDestination(0, null);
+        }
+        catch (IllegalArgumentException e)
+        {
+            exception = e;
+        }
 
-        expect(IndexOutOfBoundsException.class, () -> trip.getDestination(4));
+        assertNotNull(exception);
+        assertEquals(1, trip.getDestinationCount());
+        assertSame(a, trip.getDestination(0));
+    }
 
-        expect(
-            IndexOutOfBoundsException.class,
-            () -> trip.removeDestination(-1));
 
-        expect(
-            IndexOutOfBoundsException.class,
-            () -> trip.removeDestination(4));
+    /**
+     * Tests getting destinations by index.
+     */
+    public void testGetDestination()
+    {
+        Destination a = new Destination("Richmond");
+        Destination b = new Destination("Boston");
 
-        check(
-            trip.getDestinationCount() == 4,
-            "Invalid operations preserve the count");
+        trip.addDestination(a);
+        trip.addDestination(b);
 
-        check(
-            trip.getDestination(0) == a && trip.getDestination(1) == b
-                && trip.getDestination(2) == c
-                && trip.getDestination(3) == duplicate,
-            "Invalid operations preserve order");
+        assertSame(a, trip.getDestination(0));
+        assertSame(b, trip.getDestination(1));
+    }
+
+
+    /**
+     * Tests rejecting invalid destination indices.
+     */
+    public void testGetDestinationInvalid()
+    {
+        trip.addDestination(new Destination("Richmond"));
+
+        Exception exception = null;
+
+        try
+        {
+            trip.getDestination(-1);
+        }
+        catch (IndexOutOfBoundsException e)
+        {
+            exception = e;
+        }
+
+        assertNotNull(exception);
+
+        exception = null;
+
+        try
+        {
+            trip.getDestination(1);
+        }
+        catch (IndexOutOfBoundsException e)
+        {
+            exception = e;
+        }
+
+        assertNotNull(exception);
+    }
+
+
+    /**
+     * Tests removing destinations from different positions.
+     */
+    public void testRemoveDestination()
+    {
+        Destination a = new Destination("Richmond");
+        Destination b = new Destination("DC");
+        Destination c = new Destination("Boston");
+
+        trip.addDestination(a);
+        trip.addDestination(b);
+        trip.addDestination(c);
+
+        assertSame(b, trip.removeDestination(1));
+        assertEquals(2, trip.getDestinationCount());
+        assertSame(c, trip.getDestination(1));
+
+        assertSame(c, trip.removeDestination(1));
+        assertSame(a, trip.removeDestination(0));
+
+        assertTrue(trip.isEmpty());
+        assertEquals(0, trip.getDestinationCount());
+    }
+
+
+    /**
+     * Tests removing destinations using invalid indices.
+     */
+    public void testRemoveDestinationInvalid()
+    {
+        trip.addDestination(new Destination("Richmond"));
+
+        Exception exception = null;
+
+        try
+        {
+            trip.removeDestination(-1);
+        }
+        catch (IndexOutOfBoundsException e)
+        {
+            exception = e;
+        }
+
+        assertNotNull(exception);
+
+        exception = null;
+
+        try
+        {
+            trip.removeDestination(1);
+        }
+        catch (IndexOutOfBoundsException e)
+        {
+            exception = e;
+        }
+
+        assertNotNull(exception);
+        assertEquals(1, trip.getDestinationCount());
+    }
+
+
+    /**
+     * Tests counting activities across destinations.
+     */
+    public void testGetTotalActivities()
+    {
+        Destination a = new Destination("Richmond");
+        Destination b = new Destination("DC");
+
+        trip.addDestination(a);
+        trip.addDestination(b);
 
         a.addActivity(new Activity("Museum"));
         a.addActivity(new Activity("Park"));
         b.addActivity(new Activity("Lunch"));
 
-        check(
-            trip.getTotalActivities() == 3,
-            "Activities are totaled across destinations");
-
-        check(
-            trip.getMostActiveDestination() == a,
-            "Most-active destination is correct");
-
-        b.addActivity(new Activity("Walk"));
-
-        check(
-            trip.getMostActiveDestination() == a,
-            "A tie returns the first destination");
+        assertEquals(3, trip.getTotalActivities());
 
         a.removeActivity(0);
 
-        check(
-            trip.getMostActiveDestination() == b,
-            "Most-active destination updates after removal");
+        assertEquals(2, trip.getTotalActivities());
 
-        check(
-            trip.getTotalActivities() == 3,
-            "Total updates after activity removal");
+        trip.removeDestination(1);
+
+        assertEquals(1, trip.getTotalActivities());
+    }
+
+
+    /**
+     * Tests finding the destination with the most activities.
+     */
+    public void testGetMostActiveDestination()
+    {
+        Destination a = new Destination("Richmond");
+        Destination b = new Destination("DC");
+
+        trip.addDestination(a);
+        trip.addDestination(b);
+
+        assertEquals(a, trip.getMostActiveDestination());
+
+        a.addActivity(new Activity("Museum"));
+        a.addActivity(new Activity("Park"));
+        b.addActivity(new Activity("Lunch"));
+
+        assertSame(a, trip.getMostActiveDestination());
+
+        b.addActivity(new Activity("Walk"));
+
+        // A tie should return the first destination.
+        assertSame(a, trip.getMostActiveDestination());
+
+        a.removeActivity(0);
+
+        assertSame(b, trip.getMostActiveDestination());
+    }
+
+
+    /**
+     * Tests the string representation of a trip.
+     */
+    public void testToString()
+    {
+        trip.setName("Spring Trip");
+
+        trip.addDestination(new Destination("Richmond"));
+        trip.addDestination(new Destination("DC"));
+        trip.addDestination(new Destination("Boston"));
 
         String display = trip.toString();
 
-        check(
-            display.contains("Trip: Spring Trip") && display
-                .contains("1. Richmond\n2. DC\n3. Boston\n4. Richmond"),
-            "Itinerary displays in travel order");
-
-        check(
-            trip.removeDestination(1) == b,
-            "Removing the middle returns the correct destination");
-
-        check(trip.getDestination(1) == c, "Indices shift after removal");
-
-        check(
-            trip.getTotalActivities() == 1,
-            "Removed destinations are excluded from the total");
-
-        check(
-            trip.removeDestination(2) == duplicate,
-            "Removing the last destination works");
-
-        check(
-            trip.removeDestination(0) == a,
-            "Removing the first destination works");
-
-        check(
-            trip.removeDestination(0) == c && trip.isEmpty(),
-            "Removing the only destination leaves an empty trip");
-
-        expect(IndexOutOfBoundsException.class, () -> trip.getDestination(0));
-
-        expect(
-            IndexOutOfBoundsException.class,
-            () -> trip.removeDestination(0));
-
-        check(
-            trip.getTotalActivities() == 0
-                && trip.getMostActiveDestination() == null,
-            "Summaries return to empty values");
-
-        System.out.println("RoadTripTest: " + checks + " checks passed.");
+        assertTrue(display.contains("Trip: Spring Trip"));
+        assertTrue(display.contains("1. Richmond\n2. DC\n3. Boston"));
     }
 
 
     /**
-     * Checks a test condition.
-     *
-     * @param condition
-     *            the expected true condition
-     * @param message
-     *            the failure description
+     * Tests summary values after removing all destinations.
      */
-    private static void check(boolean condition, String message)
+    public void testEmptyTripAfterRemoval()
     {
-        if (!condition)
-        {
-            throw new AssertionError(message);
-        }
+        Destination destination = new Destination("Richmond");
 
-        checks++;
+        trip.addDestination(destination);
+        destination.addActivity(new Activity("Museum"));
+
+        trip.removeDestination(0);
+
+        assertTrue(trip.isEmpty());
+        assertEquals(0, trip.getTotalActivities());
+        assertNull(trip.getMostActiveDestination());
     }
 
 
-    /**
-     * Checks that an operation throws the expected exception.
-     *
-     * @param type
-     *            the expected exception type
-     * @param operation
-     *            the operation to execute
-     */
-    private static
-        void
-        expect(Class<? extends Throwable> type, Runnable operation)
+    public void testGetTotalEstimatedCost()
     {
-        try
-        {
-            operation.run();
-        }
-        catch (Throwable error)
-        {
-            check(type.isInstance(error), "Wrong exception: " + error);
+        Destination a = new Destination("Richmond");
+        Destination b = new Destination("Boston");
 
-            return;
-        }
+        trip.addDestination(a);
+        trip.addDestination(b);
 
-        throw new AssertionError("Expected " + type.getSimpleName());
+        // An empty trip has no activity costs.
+        assertEquals(0.0, trip.getTotalEstimatedCost(), 0.001);
+
+        // Set destination dates before adding activities.
+        a.setStayDates(LocalDate.of(2026, 10, 20), LocalDate.of(2026, 10, 22));
+
+        b.setStayDates(LocalDate.of(2026, 10, 23), LocalDate.of(2026, 10, 28));
+
+        // Add an activity to Richmond.
+        a.addActivity(
+            new Activity(
+                "Museum",
+                LocalDate.of(2026, 10, 21),
+                LocalTime.of(10, 0),
+                25.0));
+
+        // Add an activity to Boston.
+        b.addActivity(
+            new Activity(
+                "Tour",
+                LocalDate.of(2026, 10, 24),
+                LocalTime.of(9, 0),
+                30.0));
+
+        // Total estimated cost should be $55.
+        assertEquals(55.0, trip.getTotalEstimatedCost(), 0.001);
+
+        // Removing Boston should remove its activity cost.
+        trip.removeDestination(1);
+
+        assertEquals(25.0, trip.getTotalEstimatedCost(), 0.001);
+    }
+
+
+    public void testGetLongestStayDestination()
+    {
+        Destination a = new Destination("Richmond");
+        Destination b = new Destination("Boston");
+
+        trip.addDestination(a);
+        trip.addDestination(b);
+
+        assertNull(trip.getLongestStayDestination());
+
+        a.setStayDates(LocalDate.of(2026, 10, 20), LocalDate.of(2026, 10, 22));
+
+        b.setStayDates(LocalDate.of(2026, 10, 23), LocalDate.of(2026, 10, 28));
+
+        assertSame(b, trip.getLongestStayDestination());
+
+        trip.removeDestination(1);
+
+        assertSame(a, trip.getLongestStayDestination());
+    }
+
+
+    public void testGetTripDuration()
+    {
+        Destination a = new Destination("Richmond");
+        Destination b = new Destination("Boston");
+
+        trip.addDestination(a);
+        trip.addDestination(b);
+
+        assertEquals(0L, trip.getTripDuration());
+
+        a.setStayDates(LocalDate.of(2026, 10, 20), LocalDate.of(2026, 10, 22));
+
+        b.setStayDates(LocalDate.of(2026, 10, 23), LocalDate.of(2026, 10, 28));
+
+        // October 20 through October 28, inclusive = 9 days.
+        assertEquals(9L, trip.getTripDuration());
+
+        trip.removeDestination(1);
+
+        // October 20 through October 22, inclusive = 3 days.
+        assertEquals(3L, trip.getTripDuration());
     }
 }

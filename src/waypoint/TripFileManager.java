@@ -253,7 +253,26 @@ public class TripFileManager
                         LocalTime time = parseOptionalTime(record.get(3));
                         double cost = parseCost(record.get(4));
 
-                        activity = new Activity(name, date, time, cost);
+                        if (date == null || time == null)
+                        {
+                            activity = new Activity(name);
+
+                            if (date != null)
+                            {
+                                activity.setDate(date);
+                            }
+
+                            if (time != null)
+                            {
+                                activity.setTime(time);
+                            }
+
+                            activity.setEstimatedCost(cost);
+                        }
+                        else
+                        {
+                            activity = new Activity(name, date, time, cost);
+                        }
                     }
 
                     currentDestination.addActivity(activity);
@@ -263,8 +282,7 @@ public class TripFileManager
                     throw new IOException("Unknown record type: " + type);
                 }
             }
-            catch (IOException
-                | IllegalArgumentException
+            catch (IOException | IllegalArgumentException
                 | DateTimeParseException e)
             {
                 throw new IOException(

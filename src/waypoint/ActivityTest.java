@@ -45,13 +45,21 @@ public class ActivityTest
     @Test
     public void testSetNameEdgeCases()
     {
-        Activity activity = new Activity("Hiking");
-        activity.setName(null);
-        assertNull(activity.getName());
-        activity.setName("");
-        assertEquals("", activity.getName());
-        activity.setName("   ");
-        assertEquals("   ", activity.getName());
+        Activity activity = new Activity("Swimming");
+
+        // Test null name
+        Exception exception = null;
+
+        try
+        {
+            activity.setName(null);
+        }
+        catch (IllegalArgumentException e)
+        {
+            exception = e;
+        }
+
+        assertNotNull(exception);
     }
 
 

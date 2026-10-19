@@ -72,7 +72,7 @@ public class Activity
     {
         if (time == null)
         {
-            throw new IllegalArgumentException("Activity date cannot be null");
+            throw new IllegalArgumentException("Activity time cannot be null");
         }
         this.time = time;
     }
@@ -82,7 +82,7 @@ public class Activity
     {
         if (!InputValidator.isValidCost(estimatedCost))
         {
-            throw new IllegalArgumentException("Activity date cannot be null");
+            throw new IllegalArgumentException("Invalid activity cost");
         }
         this.estimatedCost = estimatedCost;
     }
@@ -99,12 +99,13 @@ public class Activity
     /** Changes the activity name. */
     public void setName(String name)
     {
-        if (name.isEmpty())
+        if (name == null || name.trim().isEmpty())
         {
-            throw new IllegalArgumentException("Name cannot be null");
+            throw new IllegalArgumentException(
+                "Activity name cannot be null or blank.");
         }
 
-        this.name = name;
+        this.name = name.trim();
     }
 
 
